@@ -1,15 +1,17 @@
-import 'package:Rafiq/presentation/auth/login_page.dart';
-import 'package:Rafiq/presentation/auth/otp_page.dart';
-import 'package:Rafiq/presentation/auth/otp_page_2.dart';
-import 'package:Rafiq/presentation/auth/register_page.dart';
-import 'package:Rafiq/presentation/auth/reset_password.dart';
-import 'package:Rafiq/presentation/home/home_page.dart';
-import 'package:Rafiq/presentation/language.dart';
-import 'package:Rafiq/presentation/splash.dart';
+import 'package:Rafiq/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'core/app_router.dart';
+import 'core/settings_provider.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => SettingsProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -17,19 +19,40 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var provider = Provider.of<SettingsProvider>(context);
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/splash',
-      routes: {
-        '/splash': (context) => const SplashPage(),
-        '/choose-language': (context) => const ChooseLanguagePage(),
-        '/register': (context) => const RegisterPage(),
-        '/login': (context) => const LoginPage(),
-         '/otp': (context) => const OtpPage(),
-         '/otp_confirm': (context) => const OtpConfirmPage(),
-         '/reset': (context) => const ResetPasswordPage(),
-        '/home': (context) => const HomePage(),
-      },
+      title: 'Rafiq',
+
+      // إعدادات اللغة
+      locale: provider.currentLocale,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'), // English
+        Locale('ar'), // Arabic
+      ],
+
+      themeMode: provider.currentThemeMode,
+      theme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.light,
+        fontFamily: 'RobotoSlab',
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+
+        brightness: Brightness.dark,
+        fontFamily: 'RobotoSlab',
+      ),
+
+      initialRoute: AppRouter.splash,
+      routes: AppRouter.getRoutes(),
     );
   }
 }

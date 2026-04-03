@@ -1,21 +1,34 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
+import '../core/app_colors.dart';
+import '../core/app_router.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
   @override
-  State<SplashPage> createState() => _SplashScreenState();
+  State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashScreenState extends State<SplashPage> {
+class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+
   @override
   void initState() {
     super.initState();
 
-    Timer(Duration(seconds: 3), () {
-      Navigator.pushNamed(context, '/choose-language');
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+    _controller.forward();
+
+    Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, AppRouter.chooseLanguage);
+      }
     });
   }
 
@@ -24,55 +37,63 @@ class _SplashScreenState extends State<SplashPage> {
     return Scaffold(
       body: Container(
         width: double.infinity,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
-            colors: [Color(0xffDCF8FC), Color(0xFFFFFFFF)],
+            colors: AppColors.gradientLight, // ← بدل mainGradient
           ),
         ),
-        child: Center(
-          child: Column(
-            spacing: 18,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset('assets/image/logo.png'),
-              RichText(
-                text: TextSpan(
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                  children: [
-                    TextSpan(
-                      text: '202',
-                      style: TextStyle(color: Color(0xFF000000), fontSize: 32),
-                    ),
-                    TextSpan(
-                      text: '6',
-                      style: TextStyle(color: Color(0xFF234CE4), fontSize: 32),
-                    ),
-                  ],
-                ),
-              ),
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset('assets/image/logo.png'),
+                const SizedBox(height: 18),
 
-              Text(
-                'لأن صحتك تستحق \n رفيقًا تثق به',
-                style: TextStyle(
-                  fontSize: 28,
-                  color: Color(0xFF0D1B3D),
-                  fontWeight: FontWeight.bold,
+                RichText(
+                  text: const TextSpan(
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                    children: [
+                      TextSpan(
+                        text: '202',
+                        style: TextStyle(color: Colors.black, fontSize: 32),
+                      ),
+                      TextSpan(
+                        text: '6',
+                        style: TextStyle(color: Color(0xFF234CE4), fontSize: 32),
+                      ),
+                    ],
+                  ),
                 ),
-                textAlign: TextAlign.center,
-              ),
 
-              Text(
-                'Because your health deserves a  \n  companion you can trust',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFF051D40),
+                const SizedBox(height: 18),
+
+                const Text(
+                  'لأن صحتك تستحق \n رفيقًا تثق به',
+                  style: TextStyle(
+                    fontSize: 28,
+                    color: AppColors.darkBlue,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+
+                const SizedBox(height: 10),
+
+                const Text(
+                  'Because your health deserves a \n companion you can trust',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.mainTextLight,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       ),

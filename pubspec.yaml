@@ -10,8 +10,15 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  provider: ^6.1.1 # إضافة مكتبة بروفايدر
   cupertino_icons: ^1.0.8
   lottie: ^3.3.2
+  http: ^1.6.0
+  shared_preferences: ^2.2.2
+
 
 dev_dependencies:
   flutter_test:
@@ -20,12 +27,14 @@ dev_dependencies:
   flutter_native_splash: ^2.4.7
   flutter_launcher_icons: ^0.13.1
 
+
 flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/image/iconn.png"
 
 flutter:
+  generate: true
   uses-material-design: true
   fonts:
     - family: RobotoSlab

@@ -1,0 +1,43 @@
+{
+  "personalizeTitle": "خصص تجربتك",
+  "personalizeDesc": "اختر اللغة والثيم المفضل لديك لتبدأ تجربة مريحة.",
+  "language": "اللغة",
+  "theme": "الثيم",
+  "letsStart": "لنبدأ",
+
+  "welcomeBack": "مرحبًا بعودتك",
+  "loginTitle": "تسجيل الدخول",
+  "loginSubtitle": "من فضلك قم بتسجيل الدخول للمتابعة",
+  "email": "البريد الإلكتروني",
+  "password": "كلمة المرور",
+  "confirmPassword": "تأكيد كلمة المرور",
+  "forgotPassword": "نسيت كلمة المرور؟",
+  "login": "تسجيل الدخول",
+  "orSignUpWith": "أو سجل باستخدام",
+  "noAccount": "ليس لديك حساب؟ ",
+  "register": "إنشاء حساب",
+  "arabic": "العربية",
+  "english": "الإنجليزية",
+  "registerSuccess": "تم إنشاء الحساب بنجاح",
+  "loginSuccess": "تم تسجيل الدخول بنجاح",
+
+  "registerTitle": "إنشاء حساب جديد",
+  "registerSubtitle": "من فضلك قم بإنشاء حساب جديد",
+  "signUp": "تسجيل",
+  "haveAccount": "إذا كان لديك حساب، ",
+  "registerFailed": "فشل إنشاء الحساب",
+
+  "firstName": "الاسم الأول",
+  "lastName": "اسم العائلة",
+
+  "nameRequired": "الاسم مطلوب",
+  "nameInvalid": "الاسم غير صالح، يجب أن يحتوي على حروف فقط",
+  "emailRequired": "البريد الإلكتروني مطلوب",
+  "emailInvalid": "البريد الإلكتروني غير صالح",
+  "passwordRequired": "كلمة المرور مطلوبة",
+  "passwordWeak": "كلمة المرور ضعيفة، يجب أن تحتوي على 8 أحرف على الأقل مع حرف كبير وصغير ورقم ورمز خاص",
+  "passwordMismatch": "كلمتا المرور غير متطابقتين",
+
+  "loginFailed": "فشل تسجيل الدخول",
+  "formInvalid": "من فضلك صحح الأخطاء في النموذج"
+}

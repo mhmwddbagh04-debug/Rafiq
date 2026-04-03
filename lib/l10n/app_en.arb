@@ -1,0 +1,43 @@
+{
+  "personalizeTitle": "Personalize Your Experience",
+  "personalizeDesc": "Choose your preferred theme and language to get started with a comfortable experience.",
+  "language": "Language",
+  "theme": "Theme",
+  "letsStart": "Let's start",
+
+  "welcomeBack": "Welcome back",
+  "loginTitle": "Login",
+  "loginSubtitle": "Please sign in to continue",
+  "email": "Email Address",
+  "password": "Password",
+  "confirmPassword": "Confirm Password",
+  "forgotPassword": "Forgot password?",
+  "login": "Login",
+  "orSignUpWith": "or sign up with",
+  "noAccount": "Don't have an account? ",
+  "register": "Register",
+  "arabic": "Arabic",
+  "english": "English",
+
+  "registerTitle": "Create Account",
+  "registerSubtitle": "Please create a new account",
+  "signUp": "Sign up",
+  "haveAccount": "If you have an account, ",
+  "registerFailed": "Register failed",
+
+  "firstName": "First name",
+  "lastName": "Last name",
+  "registerSuccess": "Account created successfully",
+  "loginSuccess": "Login successful",
+
+  "nameRequired": "Name is required",
+  "nameInvalid": "Invalid name, only letters allowed",
+  "emailRequired": "Email is required",
+  "emailInvalid": "Invalid email address",
+  "passwordRequired": "Password is required",
+  "passwordWeak": "Weak password, must contain at least 8 characters with uppercase, lowercase, number and special symbol",
+  "passwordMismatch": "Passwords do not match",
+
+  "loginFailed": "Login failed",
+  "formInvalid": "Please correct the errors in the form"
+}

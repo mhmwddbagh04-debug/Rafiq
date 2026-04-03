@@ -1,37 +1,66 @@
+import 'package:Rafiq/core/api_service.dart';
+import 'package:Rafiq/core/data-validator.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../core/app_colors.dart';
+import '../../core/settings_provider.dart';
+import 'package:Rafiq/l10n/app_localizations.dart';
+import '../../widgets/custom_button.dart';
+import '../../widgets/custom_text_field.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.of(context).size.height;
+    var provider = Provider.of<SettingsProvider>(context);
+    var local = AppLocalizations.of(context)!;
+    bool isDark = provider.isDarkMode;
+    TextEditingController emailController = TextEditingController();
+    TextEditingController passwordController = TextEditingController();
+    GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+    Color mainTextColor = isDark
+        ? AppColors.mainTextDark
+        : AppColors.mainTextLight;
+    Color secondaryTextColor = isDark
+        ? AppColors.secTextDark
+        : AppColors.secTextLight;
+    List<Color> currentGradient = isDark
+        ? AppColors.gradientDark
+        : AppColors.gradientLight;
+    Color cardColor = isDark ? AppColors.cardDark : AppColors.cardLight;
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xffDFF6FA), Color(0xffffffff)],
+            colors: currentGradient,
           ),
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
+            physics: BouncingScrollPhysics(),
             child: Column(
               children: [
                 const SizedBox(height: 20),
                 Image.asset('assets/image/logo.png'),
                 const SizedBox(height: 8),
-                const Text(
-                  "Together towards\nbetter care",
+                Text(
+                  local.loginTitle,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w600,
                     height: 1.3,
-                    color: Color(0xff1C2B4A),
+                    color: mainTextColor,
                   ),
                 ),
                 const SizedBox(height: 25),
@@ -43,131 +72,134 @@ class LoginPage extends StatelessWidget {
                     fit: BoxFit.cover,
                   ),
                 ),
-
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(24, 35, 24, 35),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    color: cardColor,
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(45),
                       topRight: Radius.circular(45),
                     ),
                   ),
                   child: Column(
                     children: [
-                      const Text(
-                        "Welcome back",
+                      Text(
+                        local.welcomeBack,
                         style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xff0D1B3E),
+                          color: isDark
+                              ? AppColors.primaryBlue
+                              : AppColors.darkBlue,
                         ),
                       ),
                       const SizedBox(height: 6),
-                      const Text(
-                        "Please sign up to continue",
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      Text(
+                        local.loginSubtitle,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: secondaryTextColor,
+                        ),
                       ),
                       const SizedBox(height: 22),
-                      buildField("Email Address"),
-                      buildField("Password", isPassword: true),
+                      Form(
+                        key: formKey,
+                        child: Column(
+                          children: [
+                            CustomTextField(
+                              cont: emailController,
+                              hint: local.email,
+                              icon: Icons.email_outlined,
+                              validator: (value) =>
+                                  DataValidator.emailValidator(
+                                    value ?? "",
+                                    local,
+                                  ),
+                            ),
+                            CustomTextField(
+                              cont: passwordController,
+                              hint: local.password,
+                              isPassword: true,
+                              icon: Icons.lock_outline,
+                              validator: (value) =>
+                                  DataValidator.passwordValidator(
+                                    value ?? "",
+                                    local,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           TextButton(
-                            onPressed: () {
-                               Navigator.pushNamed(context, '/otp');
-                            },
-                            child: const Text(
-                              "Forgot password?",
+                            onPressed: () =>
+                                Navigator.pushNamed(context, '/otp'),
+                            child: Text(
+                              local.forgotPassword,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Color(0xff6A8FB6),
+                                color: AppColors.primaryBlue,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
                         ],
                       ),
+                      const SizedBox(height: 10),
+                      CustomButton(
+                        text: local.login,
+                        onPressed: () async {
+                          if (formKey.currentState!.validate()) {
+                            try {
+                              final result = await ApiService.login(
+                                emailController.text.trim(),
+                                passwordController.text.trim(),
+                              );
 
+                              // عرض رسالة نجاح من السيرفر أو رسالة ثابتة
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    result['message'] ?? local.loginSuccess,
+                                  ),
+                                ),
+                              );
 
-
-                      SizedBox(
-                        width: double.infinity,
-                        height: 55,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff6A8FB6),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            elevation: 0,
-                          ),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/home');
-                          },
-                          child: const Text(
-                            "Login",
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
+                              Navigator.pushNamed(
+                                context,
+                                '/home',
+                              ); // نجاح الدخول
+                            } catch (e) {
+                              // عرض رسالة الخطأ القادمة من السيرفر
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(e.toString())),
+                              );
+                            }
+                          }
+                        },
                       ),
+
                       const SizedBox(height: 24),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Divider(
-                              thickness: 1,
-                              color: Colors.grey.shade300,
-                            ),
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              "or sign up with",
-                              style: TextStyle(fontSize: 13),
-                            ),
-                          ),
-                          Expanded(
-                            child: Divider(
-                              thickness: 1,
-                              color: Colors.grey.shade300,
-                            ),
-                          ),
-                        ],
-                      ),
+                      buildSocialDivider(local),
                       const SizedBox(height: 22),
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          socialButton("Google", Icons.g_mobiledata,Colors.black),
-                          socialButton("Facebook", Icons.facebook,Colors.blue),
+                          socialButton(
+                            "Google",
+                            Icons.g_mobiledata,
+                            Colors.black,
+                          ),
+                          socialButton("Facebook", Icons.facebook, Colors.blue),
                         ],
                       ),
                       const SizedBox(height: 22),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("Don't have an account? "),
-                          InkWell(
-                            onTap: () {
-                              Navigator.pushNamed(context, '/register');
-                            },
-                            child: const Text(
-                              "Register",
-                              style: TextStyle(
-                                color: Colors.blue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
+                      buildRegisterRow(context, local),
                     ],
                   ),
                 ),
@@ -178,50 +210,55 @@ class LoginPage extends StatelessWidget {
       ),
     );
   }
-}
 
-Widget buildField(String hint, {bool isPassword = false}) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 18),
-    child: TextField(
-
-      obscureText: isPassword,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(fontSize: 14, color: Color(0xffB5B5B5)),
-        filled: true,
-        fillColor: const Color(0xffF4F6F9),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 18,
+  Widget buildSocialDivider(AppLocalizations local) {
+    return Row(
+      children: [
+        Expanded(child: Divider(thickness: 1, color: Colors.grey.shade300)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(local.orSignUpWith, style: const TextStyle(fontSize: 14)),
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
-        ),
-      ),
-    ),
-  );
-}
+        Expanded(child: Divider(thickness: 1, color: Colors.grey.shade300)),
+      ],
+    );
+  }
 
-Widget socialButton(String text, IconData icon,Color color) {
-  return Container(
-    width: 150,
-    height: 50,
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: Colors.grey.shade300),
-    ),
-    child: Row(
+  Widget buildRegisterRow(BuildContext context, AppLocalizations local) {
+    return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(icon, size: 24,color: color,),
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: const TextStyle(fontSize: 14, ),
+        Text(local.noAccount),
+        InkWell(
+          onTap: () => Navigator.pushNamed(context, '/register'),
+          child: Text(
+            local.register,
+            style: const TextStyle(
+              color: Colors.blue,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
       ],
-    ),
-  );
+    );
+  }
+
+  Widget socialButton(String text, IconData icon, Color color) {
+    return Container(
+      width: 150,
+      height: 50,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 24, color: color),
+          const SizedBox(width: 8),
+          Text(text, style: const TextStyle(fontSize: 14)),
+        ],
+      ),
+    );
+  }
 }

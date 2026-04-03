@@ -1,18 +1,59 @@
+import 'package:Rafiq/core/app_router.dart';
 import 'package:flutter/material.dart';
+import 'package:Rafiq/core/data-validator.dart';
+import 'package:Rafiq/core/api_service.dart';
+import 'package:provider/provider.dart';
+import '../../core/app_colors.dart';
+import '../../core/settings_provider.dart';
+import '../../widgets/custom_button.dart';
+import '../../widgets/custom_text_field.dart';
+import 'package:Rafiq/l10n/app_localizations.dart';
 
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
   @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  final formKey = GlobalKey<FormState>();
+
+  late TextEditingController firstNameController;
+  late TextEditingController lastNameController;
+  late TextEditingController emailController;
+  late TextEditingController passwordController;
+  late TextEditingController confirmPasswordController;
+
+  @override
+  void initState() {
+    super.initState();
+    firstNameController = TextEditingController();
+    lastNameController = TextEditingController();
+    emailController = TextEditingController();
+    passwordController = TextEditingController();
+    confirmPasswordController = TextEditingController();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    var provider = Provider.of<SettingsProvider>(context);
+    var local = AppLocalizations.of(context)!;
+    bool isDark = provider.isDarkMode;
+
+    // نفس الألوان المستخدمة في صفحة اللوجن
+    Color mainTextColor = isDark ? AppColors.mainTextDark : AppColors.mainTextLight;
+    Color secondaryTextColor = isDark ? AppColors.secTextDark : AppColors.secTextLight;
+    List<Color> currentGradient = isDark ? AppColors.gradientDark : AppColors.gradientLight;
+    Color cardColor = isDark ? AppColors.cardDark : AppColors.cardLight;
+
     return Scaffold(
-      resizeToAvoidBottomInset: true,
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xffDCF8FC), Color(0xFFFFFFFF)],
+            colors: currentGradient,
           ),
         ),
         child: SafeArea(
@@ -23,14 +64,14 @@ class RegisterPage extends StatelessWidget {
                 const SizedBox(height: 20),
                 Image.asset('assets/image/logo.png'),
                 const SizedBox(height: 8),
-                const Text(
-                  "Together towards\nbetter care",
+                Text(
+                  local.registerTitle,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w600,
                     height: 1.3,
-                    color: Color(0xff1C2B4A),
+                    color: mainTextColor,
                   ),
                 ),
                 const SizedBox(height: 25),
@@ -42,109 +83,105 @@ class RegisterPage extends StatelessWidget {
                     fit: BoxFit.cover,
                   ),
                 ),
-                // const SizedBox(height: 35),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(24, 35, 24, 30),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    color: cardColor,
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(35),
                       topRight: Radius.circular(35),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 15,
-                        offset: Offset(0, -5),
-                      ),
-                    ],
                   ),
-                  child: Column(
-                    children: [
-                      const Text(
-                        "Create Account",
-                        style: TextStyle(
-                          fontSize: 24,
-                          color: Color(0xff0D1B3E),
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      children: [
+                        CustomTextField(
+                          cont: firstNameController,
+                          hint: local.firstName,
+                          icon: Icons.person_outline,
+                          validator: (value) =>
+                              DataValidator.nameValidator(value ?? "", local),
                         ),
-                      ),
-
-                      const Text(
-                        "Please create a new account",
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-
-
-                      const SizedBox(height: 25),
-
-                      buildField("First name"),
-                      buildField("Last name"),
-                      buildField("Email Address"),
-                      buildField("Password", isPassword: true),
-                      buildField("Confirm Password", isPassword: true),
-
-                      const SizedBox(height: 20),
-
-                      SizedBox(
-                        width: double.infinity,
-                        height: 55,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff6690B9),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
+                        CustomTextField(
+                          cont: lastNameController,
+                          hint: local.lastName,
+                          icon: Icons.person_outline,
+                          validator: (value) =>
+                              DataValidator.nameValidator(value ?? "", local),
+                        ),
+                        CustomTextField(
+                          cont: emailController,
+                          hint: local.email,
+                          icon: Icons.email_outlined,
+                          validator: (value) =>
+                              DataValidator.emailValidator(value ?? "", local),
+                        ),
+                        CustomTextField(
+                          cont: passwordController,
+                          hint: local.password,
+                          isPassword: true,
+                          icon: Icons.lock_outline,
+                          validator: (value) =>
+                              DataValidator.passwordValidator(value ?? "", local),
+                        ),
+                        CustomTextField(
+                          cont: confirmPasswordController,
+                          hint: local.confirmPassword,
+                          isPassword: true,
+                          icon: Icons.lock_outline,
+                          validator: (value) => DataValidator.confirmPasswordValidator(
+                            passwordController.text,
+                            value ?? "",
+                            local,
                           ),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/home');
+                        ),
+                        const SizedBox(height: 10),
+                        CustomButton(
+                          text: local.signUp,
+                          onPressed: () async {
+                            if (formKey.currentState!.validate()) {
+                              try {
+                                final result = await ApiService.register(
+                                  firstNameController.text.trim(),
+                                  lastNameController.text.trim(),
+                                  emailController.text.trim(),
+                                  passwordController.text.trim(),
+                                );
 
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(result['message'] ?? local.registerSuccess)),
+                                );
+
+                                Navigator.pushNamed(context, AppRouter.login);
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(e.toString())),
+                                );
+                              }
+                            }
                           },
-                          child:   ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xff6A8FB6),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              elevation: 0,
-                            ),
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/login');
-                            },
-                            child: const Text(
-                              "Sign up",
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
                         ),
-                      ),
-
-                      const SizedBox(height: 18),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("If you have an account, "),
-                          InkWell(
-                            onTap: () {
-                              Navigator.pushNamed(context, '/login');
-                            },
-                            child: const Text(
-                              "Login",
-                              style: TextStyle(
-                                color: Colors.blue,
-                                fontWeight: FontWeight.bold,
+                        const SizedBox(height: 18),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(local.haveAccount, style: TextStyle(color: secondaryTextColor)),
+                            InkWell(
+                              onTap: () => Navigator.pushNamed(context, '/login'),
+                              child: Text(
+                                local.login,
+                                style: const TextStyle(
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -154,28 +191,4 @@ class RegisterPage extends StatelessWidget {
       ),
     );
   }
-}
-//============================================
-
-Widget buildField(String hint, {bool isPassword = false}) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 16),
-    child: TextField(
-      obscureText: isPassword,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(color: Color(0xffB5B5B5)),
-        filled: true,
-        fillColor: const Color(0xffF4F6F9),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 18,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide.none,
-        ),
-      ),
-    ),
-  );
 }
