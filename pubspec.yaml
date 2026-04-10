@@ -18,6 +18,10 @@ dependencies:
   lottie: ^3.3.2
   http: ^1.6.0
   shared_preferences: ^2.2.2
+  dio: ^5.4.0
+  icons_plus:
+  carousel_slider: ^5.0.0 # إضافة مكتبة السلايدر
+
 
 
 dev_dependencies:

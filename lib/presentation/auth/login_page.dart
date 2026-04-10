@@ -1,6 +1,10 @@
-import 'package:Rafiq/core/api_service.dart';
+import 'package:Rafiq/core/api/auth_service.dart';
+import 'package:Rafiq/core/api/token_manager.dart';
 import 'package:Rafiq/core/data-validator.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
 import '../../core/settings_provider.dart';
@@ -16,14 +20,22 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     var provider = Provider.of<SettingsProvider>(context);
     var local = AppLocalizations.of(context)!;
     bool isDark = provider.isDarkMode;
-    TextEditingController emailController = TextEditingController();
-    TextEditingController passwordController = TextEditingController();
-    GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
     Color mainTextColor = isDark
         ? AppColors.mainTextDark
@@ -47,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            physics: BouncingScrollPhysics(),
+            physics: const BouncingScrollPhysics(),
             child: Column(
               children: [
                 const SizedBox(height: 20),
@@ -131,7 +143,6 @@ class _LoginPageState extends State<LoginPage> {
                           ],
                         ),
                       ),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -155,51 +166,125 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
                             try {
-                              final result = await ApiService.login(
+                              final result = await AuthService().login(
                                 emailController.text.trim(),
                                 passwordController.text.trim(),
                               );
 
-                              // عرض رسالة نجاح من السيرفر أو رسالة ثابتة
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    result['message'] ?? local.loginSuccess,
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: AppColors.primaryBlue,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    content: Text(
+                                      result['message'] ?? local.loginSuccess,
+                                    ),
                                   ),
-                                ),
-                              );
+                                );
 
-                              Navigator.pushNamed(
-                                context,
-                                '/home',
-                              ); // نجاح الدخول
+                                // ✅ تحقق من صلاحية التوكن
+                                final token = await TokenManager.getToken();
+                                final refreshToken =
+                                    await TokenManager.getRefreshToken();
+
+                                if (token != null && token.isNotEmpty) {
+                                  final expired = TokenManager.isTokenExpired(
+                                    token,
+                                  );
+                                  if (expired) {
+                                    print("❌ Token expired, refreshing...");
+                                    if (refreshToken != null &&
+                                        refreshToken.isNotEmpty) {
+                                      try {
+                                        final newTokens =
+                                            await AuthService().refreshToken(
+                                              {
+                                                "accessToken": token,
+                                                "refreshToken": refreshToken,
+                                              },
+                                            );
+                                        await TokenManager.saveToken(
+                                          newTokens['accessToken'],
+                                        );
+                                        await TokenManager.saveRefreshToken(
+                                          newTokens['refreshToken'],
+                                        );
+                                        print("✅ Token refreshed successfully");
+                                      } catch (err) {
+                                        print("❌ Refresh failed: $err");
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              "انتهت صلاحية الجلسة، برجاء تسجيل الدخول مرة أخرى",
+                                            ),
+                                          ),
+                                        );
+                                        return; // وقف هنا وما تروحش للـ Home
+                                      }
+                                    } else {
+                                      print("❌ No refresh token found");
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            "انتهت صلاحية الجلسة، برجاء تسجيل الدخول مرة أخرى",
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                  } else {
+                                    print("✅ Token is still valid");
+                                  }
+                                }
+
+                                // ✅ بعد التأكد من التوكن أو تحديثه
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  '/home',
+                                  (route) => false,
+                                );
+                              }
                             } catch (e) {
-                              // عرض رسالة الخطأ القادمة من السيرفر
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(e.toString())),
-                              );
+                              print("Login error: $e");
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Login failed: $e")),
+                                );
+                              }
                             }
                           }
                         },
                       ),
 
                       const SizedBox(height: 24),
-                      buildSocialDivider(local),
+                      buildSocialDivider(local, isDark),
                       const SizedBox(height: 22),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           socialButton(
                             "Google",
-                            Icons.g_mobiledata,
+                            Iconsax.google_1_bold,
                             Colors.black,
+                            isDark,
                           ),
-                          socialButton("Facebook", Icons.facebook, Colors.blue),
+                          socialButton(
+                            "Facebook",
+                            Icons.facebook,
+                            Colors.blue,
+                            isDark,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 22),
-                      buildRegisterRow(context, local),
+                      buildRegisterRow(context, local, isDark),
                     ],
                   ),
                 ),
@@ -211,24 +296,49 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget buildSocialDivider(AppLocalizations local) {
+  Widget buildSocialDivider(AppLocalizations local, bool isDark) {
     return Row(
       children: [
-        Expanded(child: Divider(thickness: 1, color: Colors.grey.shade300)),
+        Expanded(
+          child: Divider(
+            thickness: 1,
+            color: isDark ? Colors.grey[700] : Colors.grey[300],
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(local.orSignUpWith, style: const TextStyle(fontSize: 14)),
+          child: Text(
+            local.orSignUpWith,
+            style: TextStyle(
+              fontSize: 14,
+              color: isDark ? AppColors.secTextDark : AppColors.secTextLight,
+            ),
+          ),
         ),
-        Expanded(child: Divider(thickness: 1, color: Colors.grey.shade300)),
+        Expanded(
+          child: Divider(
+            thickness: 1,
+            color: isDark ? Colors.grey[700] : Colors.grey[300],
+          ),
+        ),
       ],
     );
   }
 
-  Widget buildRegisterRow(BuildContext context, AppLocalizations local) {
+  Widget buildRegisterRow(
+    BuildContext context,
+    AppLocalizations local,
+    bool isDark,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(local.noAccount),
+        Text(
+          local.noAccount,
+          style: TextStyle(
+            color: isDark ? AppColors.mainTextDark : AppColors.mainTextLight,
+          ),
+        ),
         InkWell(
           onTap: () => Navigator.pushNamed(context, '/register'),
           child: Text(
@@ -243,20 +353,28 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget socialButton(String text, IconData icon, Color color) {
+  Widget socialButton(String text, IconData icon, Color color, bool isDark) {
     return Container(
       width: 150,
       height: 50,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(
+          color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, size: 24, color: color),
           const SizedBox(width: 8),
-          Text(text, style: const TextStyle(fontSize: 14)),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 16,
+              color: isDark ? AppColors.mainTextDark : AppColors.mainTextLight,
+            ),
+          ),
         ],
       ),
     );

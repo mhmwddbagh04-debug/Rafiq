@@ -39,5 +39,35 @@
   "passwordMismatch": "Passwords do not match",
 
   "loginFailed": "Login failed",
-  "formInvalid": "Please correct the errors in the form"
+  "formInvalid": "Please correct the errors in the form",
+
+
+  "hiUser": "Hi, User",
+  "findMedicalNeeds": "Find your medical needs",
+  "bestSellingDrugs": "Best selling drugs",
+  "newArrivals": "New Arrivals",
+  "viewAll": "View all",
+  "egp": "EGP",
+  "tab": "Tab",
+
+  "home":"Home",
+  "search": "Search",
+  "interactions":"Interactions",
+  "pharmacy":"Pharmacy",
+
+  "categories": "Categories",
+  "products": "Products",
+  "painRelievers": "Pain Relievers",
+  "antiInflammatory": "Anti-inflammatory",
+  "antibiotics": "Antibiotics",
+  "gastrointestinal": "Gastrointestinal",
+  "respiratory": "Respiratory",
+  "heartAndPressure": "Heart & Pressure",
+  "diabetes": "Diabetes",
+  "nervousAndSleep": "Nervous & Sleep",
+  "supplements": "Supplements",
+  "babyProducts": "Baby Products",
+  "personalCare": "Personal Care",
+  "medicalSupplies": "Medical Supplies",
+  "cosmetics": "Cosmetics"
 }

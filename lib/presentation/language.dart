@@ -31,7 +31,7 @@ class ChooseLanguagePage extends StatelessWidget {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 26.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -154,7 +154,7 @@ class ChooseLanguagePage extends StatelessWidget {
     required bool isDark,
   }) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 200),
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(

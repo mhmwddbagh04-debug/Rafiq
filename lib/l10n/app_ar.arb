@@ -39,5 +39,34 @@
   "passwordMismatch": "كلمتا المرور غير متطابقتين",
 
   "loginFailed": "فشل تسجيل الدخول",
-  "formInvalid": "من فضلك صحح الأخطاء في النموذج"
+  "formInvalid": "من فضلك صحح الأخطاء في النموذج",
+
+  "hiUser": "مرحباً، مستخدم",
+  "findMedicalNeeds": "ابحث عن احتياجاتك الطبية",
+  "bestSellingDrugs": "الأدوية الأكثر مبيعاً",
+  "newArrivals": "وصل حديثاً",
+  "viewAll": "عرض الكل",
+  "egp": "ج.م",
+  "tab": "قرص",
+
+  "home":"الرئيسية",
+  "search": "بحث",
+  "interactions":"التفاعلات",
+  "pharmacy":"صيدلية",
+
+  "categories": "الأقسام",
+  "products": "المنتجات",
+  "painRelievers": "مسكنات الألم",
+  "antiInflammatory": "مضادات الالتهاب",
+  "antibiotics": "مضادات حيوية",
+  "gastrointestinal": "أدوية الجهاز الهضمي",
+  "respiratory": "أدوية الجهاز التنفسي",
+  "heartAndPressure": "أدوية القلب والضغط",
+  "diabetes": "أدوية السكري",
+  "nervousAndSleep": "أدوية الأعصاب والنوم",
+  "supplements": "مكملات غذائية",
+  "babyProducts": "منتجات الأطفال",
+  "personalCare": "العناية الشخصية",
+  "medicalSupplies": "مستلزمات طبية",
+  "cosmetics": "مستحضرات تجميل"
 }

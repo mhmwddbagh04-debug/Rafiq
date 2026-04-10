@@ -1,7 +1,7 @@
+import 'package:Rafiq/core/api/auth_service.dart';
 import 'package:Rafiq/core/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:Rafiq/core/data-validator.dart';
-import 'package:Rafiq/core/api_service.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
 import '../../core/settings_provider.dart';
@@ -42,9 +42,15 @@ class _RegisterPageState extends State<RegisterPage> {
     bool isDark = provider.isDarkMode;
 
     // نفس الألوان المستخدمة في صفحة اللوجن
-    Color mainTextColor = isDark ? AppColors.mainTextDark : AppColors.mainTextLight;
-    Color secondaryTextColor = isDark ? AppColors.secTextDark : AppColors.secTextLight;
-    List<Color> currentGradient = isDark ? AppColors.gradientDark : AppColors.gradientLight;
+    Color mainTextColor = isDark
+        ? AppColors.mainTextDark
+        : AppColors.mainTextLight;
+    Color secondaryTextColor = isDark
+        ? AppColors.secTextDark
+        : AppColors.secTextLight;
+    List<Color> currentGradient = isDark
+        ? AppColors.gradientDark
+        : AppColors.gradientLight;
     Color cardColor = isDark ? AppColors.cardDark : AppColors.cardLight;
 
     return Scaffold(
@@ -123,19 +129,22 @@ class _RegisterPageState extends State<RegisterPage> {
                           hint: local.password,
                           isPassword: true,
                           icon: Icons.lock_outline,
-                          validator: (value) =>
-                              DataValidator.passwordValidator(value ?? "", local),
+                          validator: (value) => DataValidator.passwordValidator(
+                            value ?? "",
+                            local,
+                          ),
                         ),
                         CustomTextField(
                           cont: confirmPasswordController,
                           hint: local.confirmPassword,
                           isPassword: true,
                           icon: Icons.lock_outline,
-                          validator: (value) => DataValidator.confirmPasswordValidator(
-                            passwordController.text,
-                            value ?? "",
-                            local,
-                          ),
+                          validator: (value) =>
+                              DataValidator.confirmPasswordValidator(
+                                passwordController.text,
+                                value ?? "",
+                                local,
+                              ),
                         ),
                         const SizedBox(height: 10),
                         CustomButton(
@@ -143,15 +152,20 @@ class _RegisterPageState extends State<RegisterPage> {
                           onPressed: () async {
                             if (formKey.currentState!.validate()) {
                               try {
-                                final result = await ApiService.register(
-                                  firstNameController.text.trim(),
-                                  lastNameController.text.trim(),
-                                  emailController.text.trim(),
-                                  passwordController.text.trim(),
+                                final result = await AuthService().register(
+                                  firstName: firstNameController.text.trim(),
+                                  lastName: lastNameController.text.trim(),
+                                  email: emailController.text.trim(),
+                                  password: passwordController.text.trim(),
                                 );
 
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(result['message'] ?? local.registerSuccess)),
+                                  SnackBar(
+                                    content: Text(
+                                      result['message'] ??
+                                          local.registerSuccess,
+                                    ),
+                                  ),
                                 );
 
                                 Navigator.pushNamed(context, AppRouter.login);
@@ -167,9 +181,13 @@ class _RegisterPageState extends State<RegisterPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(local.haveAccount, style: TextStyle(color: secondaryTextColor)),
+                            Text(
+                              local.haveAccount,
+                              style: TextStyle(color: secondaryTextColor),
+                            ),
                             InkWell(
-                              onTap: () => Navigator.pushNamed(context, '/login'),
+                              onTap: () =>
+                                  Navigator.pushNamed(context, '/login'),
                               child: Text(
                                 local.login,
                                 style: const TextStyle(

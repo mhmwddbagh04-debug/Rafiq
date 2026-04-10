@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:Rafiq/core/api/token_manager.dart';
 import 'package:flutter/material.dart';
 import '../core/app_colors.dart';
 import '../core/app_router.dart';
@@ -25,11 +26,29 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
     _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _controller.forward();
 
+    _checkLoginStatus();
+  }
+
+  void _checkLoginStatus() async {
+    final token = await TokenManager.getToken();
+
     Timer(const Duration(seconds: 3), () {
       if (mounted) {
-        Navigator.pushReplacementNamed(context, AppRouter.chooseLanguage);
+        if (token != null && token.isNotEmpty) {
+          // ✅ لو فيه توكن → يدخل على الهوم مباشرة
+          Navigator.pushReplacementNamed(context, AppRouter.home);
+        } else {
+          // ✅ لو مفيش توكن → يروح لشاشة اختيار اللغة
+          Navigator.pushReplacementNamed(context, AppRouter.chooseLanguage);
+        }
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -41,7 +60,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
           gradient: LinearGradient(
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
-            colors: AppColors.gradientLight, // ← بدل mainGradient
+            colors: AppColors.gradientLight,
           ),
         ),
         child: FadeTransition(
@@ -52,7 +71,6 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
               children: [
                 Image.asset('assets/image/logo.png'),
                 const SizedBox(height: 18),
-
                 RichText(
                   text: const TextSpan(
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
@@ -68,9 +86,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 18),
-
                 const Text(
                   'لأن صحتك تستحق \n رفيقًا تثق به',
                   style: TextStyle(
@@ -80,9 +96,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                   ),
                   textAlign: TextAlign.center,
                 ),
-
                 const SizedBox(height: 10),
-
                 const Text(
                   'Because your health deserves a \n companion you can trust',
                   style: TextStyle(

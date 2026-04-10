@@ -9,7 +9,7 @@ class AppColors {
   // ================================
   // Light Mode
   // ================================
-  static const Color backgroundLight = Color(0xffDFF6FA);
+  static const Color backgroundLight =     Color(0xFFFAFAFA);
   static const Color cardLight = white;
   static const Color mainTextLight = Color(0xff1C2B4A);
   static const Color secTextLight = grey;
@@ -23,12 +23,12 @@ class AppColors {
   // Dark Mode
   // ================================
   static const Color backgroundDark = Color(0xff0D1B3E);
-  static const Color cardDark =white;
+  static const Color cardDark = Color(0xff1A2A4D);
   static const Color mainTextDark = white;
   static const Color secTextDark = grey;
   static const Color buttonDark = primaryBlue;
   static const List<Color> gradientDark = [
     Color(0xff173E90),
-    Color(0xff0D1B3E),
+    Color(0x800d1b3e),
   ];
 }

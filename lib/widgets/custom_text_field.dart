@@ -1,5 +1,7 @@
 import 'package:Rafiq/core/app_colors.dart';
+import 'package:Rafiq/core/settings_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class CustomTextField extends StatelessWidget {
   final String hint;
@@ -19,9 +21,12 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var provider = Provider.of<SettingsProvider>(context);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: TextFormField(
+        style:  TextStyle(fontSize: 18,color: provider.isDarkMode?AppColors.mainTextLight:AppColors.mainTextLight),
         controller: cont,
         obscureText: isPassword,
         validator: validator, // ← أضفنا هنا
