@@ -1,132 +1,136 @@
+import 'package:Rafiq/core/api/auth_service.dart';
+import 'package:Rafiq/core/app_colors.dart';
+import 'package:Rafiq/core/app_router.dart';
+import 'package:Rafiq/core/data-validator.dart';
+import 'package:Rafiq/core/settings_provider.dart';
+import 'package:Rafiq/l10n/app_localizations.dart';
+import 'package:Rafiq/widgets/auth_screen_wrapper.dart';
+import 'package:Rafiq/widgets/custom_snackbar.dart';
+import 'package:Rafiq/widgets/custom_button.dart';
+import 'package:Rafiq/widgets/custom_text_field.dart';
+import 'package:dio/dio.dart';
+import 'package:Rafiq/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class OtpPage extends StatelessWidget {
+class OtpPage extends StatefulWidget {
   const OtpPage({super.key});
 
   @override
+  State<OtpPage> createState() => _OtpPageState();
+}
+
+class _OtpPageState extends State<OtpPage> {
+  final TextEditingController emailController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xffDFF6FA), Color(0xffffffff)],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
-                Image.asset('assets/image/logo.png'),
-                const SizedBox(height: 8),
-                const Text(
-                  "Together towards\nbetter care",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w600,
-                    height: 1.3,
-                    color: Color(0xff1C2B4A),
-                  ),
-                ),
-                const SizedBox(height: 25),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Image.asset(
-                    "assets/image/doctors.png",
-                    height: 200,
-                    fit: BoxFit.cover,
-                  ),
-                ),
+    var provider = Provider.of<SettingsProvider>(context);
+    var local = AppLocalizations.of(context)!;
+    bool isDark = provider.isDarkMode;
 
-                // الجزء السفلي (كونتينر أبيض)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(24, 35, 24, 35),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(45),
-                      topRight: Radius.circular(45),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      const Text(
-                        "Welcome back",
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xff0D1B3E),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        "Please enter your email",
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 22),
-
-                      // حقل إدخال الإيميل
-                      TextField(
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          hintText: "Email Address",
-                          hintStyle: const TextStyle(
-                            fontSize: 14,
-                            color: Color(0xffB5B5B5),
-                          ),
-                          filled: true,
-                          fillColor: const Color(0xffF4F6F9),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 18,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // زر إرسال OTP
-                      SizedBox(
-                        width: double.infinity,
-                        height: 55,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff6A8FB6),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            elevation: 0,
-                          ),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/otp_confirm');
-                          },
-                          child: const Text(
-                            "Send OTP",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+    return AuthScreenWrapper(
+      title: "Together towards\nbetter care",
+      child: Column(
+        children: [
+          Text(
+            local.welcomeBack,
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: isDark ? AppColors.primaryBlue : AppColors.darkBlue,
             ),
           ),
-        ),
+          const SizedBox(height: 6),
+          Text(
+            local.pleaseEnterYourEmail,
+            style: TextStyle(
+              fontSize: 14,
+              color: isDark ? AppColors.secTextDark : AppColors.secTextLight,
+            ),
+          ),
+          const SizedBox(height: 22),
+
+          // حقل إدخال الإيميل
+          CustomTextField(
+            cont: emailController,
+            hint: local.email,
+            icon: Icons.email_outlined,
+            validator: (value) =>
+                DataValidator.emailValidator(value ?? "", local),
+          ),
+
+          const SizedBox(height: 20),
+
+          CustomButton(
+            text: "Send OTP",
+            isLoading: _isLoading,
+            onPressed: () => _handleSendOtp(context),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> _handleSendOtp(BuildContext context) async {
+    if (emailController.text.isEmpty) {
+      CustomSnackBar.show(
+        context,
+        message: "Please enter your email",
+        isError: true,
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await AuthService().forgetPassword(emailController.text.trim());
+      if (context.mounted) {
+        CustomSnackBar.show(
+          context,
+          message: "OTP sent to your email successfully",
+        );
+        Navigator.pushNamed(
+          context,
+          AppRouter.otpConfirm,
+          arguments: emailController.text.trim(),
+        );
+      }
+    } on DioException catch (e) {
+      String errorMessage = "Failed to send OTP";
+      if (e.response?.data is Map) {
+        errorMessage =
+            e.response?.data['description'] ??
+            e.response?.data['message'] ??
+            errorMessage;
+      }
+      if (context.mounted) {
+        CustomSnackBar.show(context, message: errorMessage, isError: true);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        CustomSnackBar.show(
+          context,
+          message: "An error occurred",
+          isError: true,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 }

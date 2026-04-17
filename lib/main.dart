@@ -1,4 +1,5 @@
 import 'package:Rafiq/core/app_colors.dart';
+import 'package:Rafiq/core/favorite_provider.dart';
 import 'package:Rafiq/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,8 +10,11 @@ import 'core/settings_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => SettingsProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => SettingsProvider()),
+        ChangeNotifierProvider(create: (context) => FavoriteProvider()),
+      ],
       child: const MyApp(),
     ),
   );

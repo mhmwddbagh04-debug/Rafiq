@@ -1,3 +1,6 @@
+import 'package:Rafiq/presentation/home/screen/ai_screen.dart';
+import 'package:Rafiq/presentation/product/item_screen.dart';
+import 'package:Rafiq/presentation/product/all_products_screen.dart'; // سننشئ هذا الملف
 import 'package:flutter/material.dart';
 import '../presentation/auth/login_page.dart';
 import '../presentation/auth/otp_page.dart';
@@ -17,6 +20,9 @@ class AppRouter {
   static const String otpConfirm = '/otp_confirm';
   static const String reset = '/reset';
   static const String home = '/home';
+  static const String ai = '/ai';
+  static const String item = '/item';
+  static const String allProducts = '/all-products';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -28,6 +34,9 @@ class AppRouter {
       otpConfirm: (context) => const OtpConfirmPage(),
       reset: (context) => const ResetPasswordPage(),
       home: (context) => const HomePage(),
+      ai: (context) => const AiScreen(),
+      item: (context) => const ItemScreen(),
+      allProducts: (context) => const AllProductsScreen(),
     };
   }
 }

@@ -3,7 +3,8 @@ import '../core/app_colors.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
+  final bool isLoading;
   final Color backgroundColor;
   final Color textColor;
   final double width;
@@ -15,6 +16,7 @@ class CustomButton extends StatelessWidget {
     super.key,
     required this.text,
     required this.onPressed,
+    this.isLoading = false,
     this.backgroundColor = AppColors.primaryBlue,
     this.textColor = Colors.white,
     this.width = double.infinity,
@@ -30,7 +32,7 @@ class CustomButton extends StatelessWidget {
       height: height,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor,
+          backgroundColor: isLoading ? backgroundColor.withOpacity(0.7) : backgroundColor,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(borderRadius),
@@ -40,15 +42,25 @@ class CustomButton extends StatelessWidget {
                 : BorderSide.none,
           ),
         ),
-        onPressed: onPressed,
-        child: Text(
-          text,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: fontSize,
-            color: textColor,
-          ),
-        ),
+        // تعطيل الضغط إذا كان في حالة تحميل
+        onPressed: isLoading ? null : onPressed,
+        child: isLoading
+            ? const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
+                ),
+              )
+            : Text(
+                text,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: fontSize,
+                  color: textColor,
+                ),
+              ),
       ),
     );
   }

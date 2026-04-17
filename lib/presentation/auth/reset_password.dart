@@ -1,144 +1,123 @@
+import 'package:Rafiq/core/api/auth_service.dart';
+import 'package:Rafiq/core/app_router.dart';
+import 'package:Rafiq/widgets/auth_screen_wrapper.dart';
+import 'package:Rafiq/widgets/custom_snackbar.dart';
+import 'package:Rafiq/widgets/custom_button.dart';
+import 'package:Rafiq/widgets/custom_text_field.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-class ResetPasswordPage extends StatelessWidget {
+class ResetPasswordPage extends StatefulWidget {
   const ResetPasswordPage({super.key});
 
   @override
+  State<ResetPasswordPage> createState() => _ResetPasswordPageState();
+}
+
+class _ResetPasswordPageState extends State<ResetPasswordPage> {
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xffDFF6FA), Color(0xffffffff)],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
+    // استقبال الـ userId (الذي هو تطبيق الـ applicationUserId المطلوب)
+    final Map<String, dynamic> args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final String userId = args['userId'] ?? "";
 
-                Image.asset('assets/image/logo.png'),
-                const SizedBox(height: 8),
-                const Text(
-                  "Together towards\nbetter care",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w600,
-                    height: 1.3,
-                    color: Color(0xff1C2B4A),
-                  ),
-                ),
-                const SizedBox(height: 25),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Image.asset(
-                    "assets/image/doctors.png",
-                    height: 200,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(24, 35, 24, 35),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(45),
-                      topRight: Radius.circular(45),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      const Text(
-                        "Welcome back",
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xff0D1B3E),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        "Please Reset password",
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 22),
-
-                      TextField(
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          hintText: "Password",
-                          filled: true,
-                          fillColor: const Color(0xffF4F6F9),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 18,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 18),
-
-                      TextField(
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          hintText: "Confirm Password",
-                          filled: true,
-                          fillColor: const Color(0xffF4F6F9),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 18,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 25),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 55,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xff6A8FB6),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            elevation: 0,
-                          ),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/login');
-                          },
-                          child: const Text(
-                            "Reset Password",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+    return AuthScreenWrapper(
+      title: "Together towards\nbetter care",
+      child: Column(
+        children: [
+          const Text(
+            "Reset Password",
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: Color(0xff0D1B3E),
             ),
           ),
-        ),
+          const SizedBox(height: 6),
+          const Text(
+            "Please enter your new password",
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          const SizedBox(height: 22),
+          CustomTextField(
+            cont: passwordController,
+            hint: "New Password",
+            isPassword: true,
+            icon: Icons.lock_outline,
+          ),
+          const SizedBox(height: 18),
+          CustomTextField(
+            cont: confirmPasswordController,
+            hint: "Confirm New Password",
+            isPassword: true,
+            icon: Icons.lock_outline,
+          ),
+          const SizedBox(height: 25),
+          CustomButton(
+            text: "Reset Password",
+            isLoading: _isLoading,
+            onPressed: () => _handleResetPassword(context, userId),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> _handleResetPassword(BuildContext context, String userId) async {
+    if (passwordController.text.isEmpty) {
+      CustomSnackBar.show(context, message: "Please enter a password", isError: true);
+      return;
+    }
+    if (passwordController.text != confirmPasswordController.text) {
+      CustomSnackBar.show(context, message: "Passwords do not match", isError: true);
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // إرسال البيانات بالمفاتيح المطلوبة من الباك اند
+      await AuthService().resetPassword(
+        applicationUserId: userId,
+        password: passwordController.text.trim(),
+        confirmPassword: confirmPasswordController.text.trim(),
+      );
+
+      if (context.mounted) {
+        CustomSnackBar.show(context, message: "Password reset successfully");
+        Navigator.pushNamedAndRemoveUntil(context, AppRouter.login, (route) => false);
+      }
+    } on DioException catch (e) {
+      String errorMessage = "Failed to reset password";
+      if (e.response?.data is Map) {
+        errorMessage = e.response?.data['description'] ?? e.response?.data['message'] ?? errorMessage;
+      }
+      if (context.mounted) {
+        CustomSnackBar.show(context, message: errorMessage, isError: true);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        CustomSnackBar.show(context, message: "An error occurred", isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 }

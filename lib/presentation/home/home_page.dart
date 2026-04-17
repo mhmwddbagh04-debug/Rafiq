@@ -1,11 +1,13 @@
 import 'package:Rafiq/core/app_colors.dart';
+import 'package:Rafiq/core/app_router.dart';
 import 'package:Rafiq/core/settings_provider.dart';
 import 'package:Rafiq/l10n/app_localizations.dart';
 import 'package:Rafiq/presentation/home/tabs/home_tab.dart';
-import 'package:Rafiq/presentation/home/tabs/interaction_tab.dart';
+import 'package:Rafiq/presentation/home/tabs/Favorite_tab.dart';
 import 'package:Rafiq/presentation/home/tabs/pharmacy_tab.dart';
 import 'package:Rafiq/presentation/home/tabs/search_tab.dart';
 import 'package:Rafiq/widgets/custom_drawer.dart';
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
@@ -19,10 +21,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final List<Widget> _pages = [
-    HomeTab(),
-    SearchTab(),
-    InteractionsTab(),
-    PharmacyTab(),
+    const HomeTab(),
+    const SearchTab(),
+    const FavoriteTab(),
+    const PharmacyTab(),
   ];
 
   int currentIndex = 0;
@@ -38,79 +40,71 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: provider.isDarkMode
           ? AppColors.backgroundDark
           : theme.scaffoldBackgroundColor,
-
       appBar: AppBar(
-        elevation: 2,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Iconsax.menu_outline),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        elevation: 0, 
         backgroundColor: provider.isDarkMode
             ? AppColors.backgroundDark
-            : Color(0xFFDCF8FC),
-
-        title: Image.asset('assets/image/rafiq2.png', width: 80, height: 50),
+            : const Color(0xFFDCF8FC),
+        
+        centerTitle: false,
+        title: Image.asset(!provider.isDarkMode?'assets/image/rafiq2.png':'assets/image/Copilot_20260417_184551.png', width: 70, height: 40),
+        
         actions: [
-          InkWell(
-            child: IconButton(
-              icon: const Icon(Icons.shopping_cart),
-              onPressed: () {},
-            ),
+          IconButton(
+            icon: Icon(provider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed: () => provider.changeTheme(provider.isDarkMode ? ThemeMode.light : ThemeMode.dark),
           ),
-          const SizedBox(width: 20),
+          IconButton(
+            icon: const Icon(Icons.language),
+            onPressed: () {
+              provider.changeLanguage(provider.isArabic ? 'en' : 'ar');
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.shopping_cart_outlined), 
+            onPressed: () {
+              // مسار السلة مستقبلاً
+            }
+          ),
+          const SizedBox(width: 5),
         ],
       ),
       body: _pages[currentIndex],
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: provider.isDarkMode ? Colors.blue : Color(0xff173E90),
-        child: const Icon(Icons.wechat_outlined),
+        onPressed: () {
+          Navigator.pushNamed(context, AppRouter.ai);
+        },
+        backgroundColor: provider.isDarkMode
+            ? Colors.blue
+            : const Color(0xff173E90),
+        child: const Icon(Icons.wechat_outlined, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      drawer: CustomDrawer(),
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.fromLTRB(25, 10, 25, 25),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
-          child: BottomNavigationBar(
-            elevation: 0,
-            currentIndex: currentIndex,
-            onTap: (index) {
-              setState(() {
-                currentIndex = index;
-              });
-            },
-            backgroundColor: provider.isDarkMode
-                ? Color(0xff173E90)
-                : Color(0xFFDCF8FC),
-            type: BottomNavigationBarType.fixed,
-            selectedItemColor: provider.isDarkMode
-                ? Colors.blue
-                : Color(0xff173E90),
-            unselectedItemColor: provider.isDarkMode
-                ? Colors.white
-                : Colors.black.withOpacity(0.6),
-            iconSize: 28,
-            items: [
-              BottomNavigationBarItem(
-                activeIcon: const Icon(Iconsax.home_1_bold),
-                icon: const Icon(Iconsax.home_1_outline),
-                label: local.home,
-              ),
-              BottomNavigationBarItem(
-                activeIcon: const Icon(Iconsax.search_normal_1_bold),
-                icon: const Icon(Icons.search),
-                label: local.search,
-              ),
-              BottomNavigationBarItem(
-                activeIcon: const Icon(Icons.science),
-                icon: const Icon(Icons.science_outlined),
-                label: local.interactions,
-              ),
-              BottomNavigationBarItem(
-                activeIcon: const Icon(Icons.local_pharmacy),
-                icon: const Icon(Icons.local_pharmacy_outlined),
-                label: local.pharmacy,
-              ),
-            ],
-          ),
-        ),
+      drawer: const CustomDrawer(),
+      bottomNavigationBar: CurvedNavigationBar(
+        height: 70,
+        items: [
+          Icon(Iconsax.home_1_outline, color: provider.isDarkMode ? Colors.white : Colors.indigo, size: 30),
+          Icon(Icons.search, color: provider.isDarkMode ? Colors.white :Colors.indigo, size: 30),
+          Icon(Icons.favorite_border, color: provider.isDarkMode ? Colors.white : Colors.indigo,  size: 30),
+          Icon(Icons.local_pharmacy_outlined,color: provider.isDarkMode ? Colors.white : Colors.indigo, size: 30),
+        ],
+        animationCurve: Curves.fastOutSlowIn,
+        animationDuration: const Duration(milliseconds: 600),
+        index: currentIndex,
+        onTap: (index) {
+          setState(() => currentIndex = index);
+        },
+        color:provider.isDarkMode ? const Color(0xff173E90) : const Color(0xFFDCF8FC),
+        backgroundColor: Colors.transparent,
+        buttonBackgroundColor: provider.isDarkMode ? const Color(0xff173E90) : const Color(0xFFDCF8FC),
+        letIndexChange: (index) => true,
       ),
     );
   }

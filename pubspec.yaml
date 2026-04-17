@@ -13,16 +13,21 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-  provider: ^6.1.1 # إضافة مكتبة بروفايدر
+  provider: ^6.1.1
   cupertino_icons: ^1.0.8
   lottie: ^3.3.2
   http: ^1.6.0
   shared_preferences: ^2.2.2
   dio: ^5.4.0
   icons_plus:
-  carousel_slider: ^5.0.0 # إضافة مكتبة السلايدر
+  carousel_slider: ^5.0.0
+  curved_navigation_bar: ^1.0.6
+  
 
-
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+  flutter_spinkit: ^5.2.1
+  fluttertoast: ^8.2.10
 
 dev_dependencies:
   flutter_test:

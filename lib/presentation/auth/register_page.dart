@@ -1,9 +1,11 @@
 import 'package:Rafiq/core/api/auth_service.dart';
 import 'package:Rafiq/core/app_router.dart';
+import 'package:Rafiq/widgets/auth_screen_wrapper.dart';
+import 'package:Rafiq/widgets/custom_snackbar.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:Rafiq/core/data-validator.dart';
 import 'package:provider/provider.dart';
-import '../../core/app_colors.dart';
 import '../../core/settings_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
@@ -19,20 +21,22 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final formKey = GlobalKey<FormState>();
 
-  late TextEditingController firstNameController;
-  late TextEditingController lastNameController;
-  late TextEditingController emailController;
-  late TextEditingController passwordController;
-  late TextEditingController confirmPasswordController;
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+
+  bool _isLoading = false; // متغير حالة التحميل
 
   @override
-  void initState() {
-    super.initState();
-    firstNameController = TextEditingController();
-    lastNameController = TextEditingController();
-    emailController = TextEditingController();
-    passwordController = TextEditingController();
-    confirmPasswordController = TextEditingController();
+  void dispose() {
+    firstNameController.dispose();
+    lastNameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -41,172 +45,108 @@ class _RegisterPageState extends State<RegisterPage> {
     var local = AppLocalizations.of(context)!;
     bool isDark = provider.isDarkMode;
 
-    // نفس الألوان المستخدمة في صفحة اللوجن
-    Color mainTextColor = isDark
-        ? AppColors.mainTextDark
-        : AppColors.mainTextLight;
-    Color secondaryTextColor = isDark
-        ? AppColors.secTextDark
-        : AppColors.secTextLight;
-    List<Color> currentGradient = isDark
-        ? AppColors.gradientDark
-        : AppColors.gradientLight;
-    Color cardColor = isDark ? AppColors.cardDark : AppColors.cardLight;
-
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: currentGradient,
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
-                Image.asset('assets/image/logo.png'),
-                const SizedBox(height: 8),
-                Text(
-                  local.registerTitle,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w600,
-                    height: 1.3,
-                    color: mainTextColor,
-                  ),
-                ),
-                const SizedBox(height: 25),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Image.asset(
-                    "assets/image/doctors.png",
-                    height: 200,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(24, 35, 24, 30),
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(35),
-                      topRight: Radius.circular(35),
-                    ),
-                  ),
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      children: [
-                        CustomTextField(
-                          cont: firstNameController,
-                          hint: local.firstName,
-                          icon: Icons.person_outline,
-                          validator: (value) =>
-                              DataValidator.nameValidator(value ?? "", local),
-                        ),
-                        CustomTextField(
-                          cont: lastNameController,
-                          hint: local.lastName,
-                          icon: Icons.person_outline,
-                          validator: (value) =>
-                              DataValidator.nameValidator(value ?? "", local),
-                        ),
-                        CustomTextField(
-                          cont: emailController,
-                          hint: local.email,
-                          icon: Icons.email_outlined,
-                          validator: (value) =>
-                              DataValidator.emailValidator(value ?? "", local),
-                        ),
-                        CustomTextField(
-                          cont: passwordController,
-                          hint: local.password,
-                          isPassword: true,
-                          icon: Icons.lock_outline,
-                          validator: (value) => DataValidator.passwordValidator(
-                            value ?? "",
-                            local,
-                          ),
-                        ),
-                        CustomTextField(
-                          cont: confirmPasswordController,
-                          hint: local.confirmPassword,
-                          isPassword: true,
-                          icon: Icons.lock_outline,
-                          validator: (value) =>
-                              DataValidator.confirmPasswordValidator(
-                                passwordController.text,
-                                value ?? "",
-                                local,
-                              ),
-                        ),
-                        const SizedBox(height: 10),
-                        CustomButton(
-                          text: local.signUp,
-                          onPressed: () async {
-                            if (formKey.currentState!.validate()) {
-                              try {
-                                final result = await AuthService().register(
-                                  firstName: firstNameController.text.trim(),
-                                  lastName: lastNameController.text.trim(),
-                                  email: emailController.text.trim(),
-                                  password: passwordController.text.trim(),
-                                );
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      result['message'] ??
-                                          local.registerSuccess,
-                                    ),
-                                  ),
-                                );
-
-                                Navigator.pushNamed(context, AppRouter.login);
-                              } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(e.toString())),
-                                );
-                              }
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 18),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              local.haveAccount,
-                              style: TextStyle(color: secondaryTextColor),
-                            ),
-                            InkWell(
-                              onTap: () =>
-                                  Navigator.pushNamed(context, '/login'),
-                              child: Text(
-                                local.login,
-                                style: const TextStyle(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+    return AuthScreenWrapper(
+      title: local.registerTitle,
+      child: Form(
+        key: formKey,
+        child: Column(
+          children: [
+            CustomTextField(
+              cont: firstNameController,
+              hint: local.firstName,
+              icon: Icons.person_outline,
+              validator: (value) => DataValidator.nameValidator(value ?? "", local),
             ),
-          ),
+            CustomTextField(
+              cont: lastNameController,
+              hint: local.lastName,
+              icon: Icons.person_outline,
+              validator: (value) => DataValidator.nameValidator(value ?? "", local),
+            ),
+            CustomTextField(
+              cont: emailController,
+              hint: local.email,
+              icon: Icons.email_outlined,
+              validator: (value) => DataValidator.emailValidator(value ?? "", local),
+            ),
+            CustomTextField(
+              cont: passwordController,
+              hint: local.password,
+              isPassword: true,
+              icon: Icons.lock_outline,
+              validator: (value) => DataValidator.passwordValidator(value ?? "", local),
+            ),
+            CustomTextField(
+              cont: confirmPasswordController,
+              hint: local.confirmPassword,
+              isPassword: true,
+              icon: Icons.lock_outline,
+              validator: (value) => DataValidator.confirmPasswordValidator(
+                passwordController.text,
+                value ?? "",
+                local,
+              ),
+            ),
+            const SizedBox(height: 15),
+            CustomButton(
+              text: local.signUp,
+              isLoading: _isLoading, // ربط حالة التحميل بالزر
+              onPressed: () => _handleRegister(context, local),
+            ),
+            const SizedBox(height: 18),
+            _buildLoginRow(context, local, isDark),
+          ],
         ),
       ),
+    );
+  }
+
+  Future<void> _handleRegister(BuildContext context, AppLocalizations local) async {
+    if (!formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true); // بدء التحميل
+
+    try {
+      final result = await AuthService().register(
+        firstName: firstNameController.text.trim(),
+        lastName: lastNameController.text.trim(),
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      if (context.mounted) {
+        CustomSnackBar.show(context, message: result['message'] ?? local.registerSuccess);
+        Navigator.pushNamed(context, AppRouter.login);
+      }
+    } on DioException catch (e) {
+      String errorMessage = "Registration failed";
+      if (e.response?.data is Map) {
+        errorMessage = e.response?.data['description'] ?? e.response?.data['message'] ?? errorMessage;
+      }
+      if (context.mounted) CustomSnackBar.show(context, message: errorMessage, isError: true);
+    } catch (e) {
+      if (context.mounted) CustomSnackBar.show(context, message: "An error occurred", isError: true);
+    } finally {
+      if (mounted) setState(() => _isLoading = false); // إنهاء التحميل
+    }
+  }
+
+  Widget _buildLoginRow(BuildContext context, AppLocalizations local, bool isDark) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          local.haveAccount,
+          style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
+        ),
+        InkWell(
+          onTap: () => Navigator.pushNamed(context, '/login'),
+          child: Text(
+            local.login,
+            style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,160 +1,139 @@
 import 'package:Rafiq/core/api/profile_service.dart';
+import 'package:Rafiq/core/api/token_manager.dart';
 import 'package:Rafiq/core/app_colors.dart';
 import 'package:Rafiq/core/app_router.dart';
-import 'package:Rafiq/data/models/user_model.dart';
-import 'package:Rafiq/widgets/state_widgets.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:Rafiq/core/settings_provider.dart';
+import 'package:Rafiq/data/models/user_model.dart';
+import 'package:Rafiq/l10n/app_localizations.dart';
+import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:provider/provider.dart';
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<SettingsProvider>(context);
-    final theme = Theme.of(context);
+    var provider = Provider.of<SettingsProvider>(context);
+    var theme = Theme.of(context);
+    var local = AppLocalizations.of(context)!;
 
     return Drawer(
+      backgroundColor: provider.isDarkMode
+          ? AppColors.backgroundDark
+          : Colors.white,
       child: Column(
         children: [
-          FutureBuilder<UserModel>(
-            future: ProfileService().getProfile(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Container(
-                  height: 200,
-                  alignment: Alignment.center,
-                  child: const LoadingWidget(),
-                );
-              } else if (snapshot.hasError) {
-                return Container(
-                  height: 200,
-                  alignment: Alignment.center,
-                  child: const Text(
-                    "خطأ في جلب البيانات",
-                    style: TextStyle(color: Colors.red),
-                  ),
-                );
-              } else if (!snapshot.hasData) {
-                return Container(
-                  height: 200,
-                  alignment: Alignment.center,
-                  child: const Text("لا توجد بيانات مستخدم"),
-                );
-              } else {
-                final user = snapshot.data!;
-
-                return Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.only(
-                    top: 70,
-                    bottom: 30,
-                    left: 20,
-                    right: 20,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: AppColors.gradientDark),
-                    borderRadius: const BorderRadius.only(
-                      bottomRight: Radius.circular(50),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const CircleAvatar(
-                        radius: 40,
-                        backgroundColor: Colors.white,
-                        child: Icon(
-                          Iconsax.user_outline,
-                          size: 45,
-                          color: Colors.blue,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      Text(
-                        user.fullName.isNotEmpty ? user.fullName : "مستخدم",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        user.email.isNotEmpty ? user.email : "no-email@example.com",
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-            },
-          ),
-
-          const SizedBox(height: 20),
-
-          // أزرار اللغة والثيم
+          _buildHeader(context, theme, provider),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
+              padding: EdgeInsets.zero,
               children: [
                 _buildDrawerItem(
-                  context,
-                  icon: Iconsax.language_square_outline,
-                  title: provider.isArabic ? 'English' : 'اللغة العربية',
-                  trailing: Switch(
-                    value: provider.isArabic,
-                    onChanged: (value) {
-                      provider.changeLanguage(value ? 'ar' : 'en');
-                    },
+                  context: context,
+                  icon: Iconsax.box_outline,
+                  title: "My Orders",
+                  onTap: () {},
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Iconsax.heart_outline,
+                  title: "Wishlist",
+                  onTap: () {},
+                ),
+
+                const Divider(indent: 20, endIndent: 20),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
+                  child: Text(
+                    "Support & Info",
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: Colors.grey,
+                    ),
                   ),
                 ),
                 _buildDrawerItem(
-                  context,
-                  icon: provider.isDarkMode
-                      ? Iconsax.moon_outline
-                      : Iconsax.sun_1_outline,
-                  title: provider.isArabic ? 'الوضع الليلي' : 'Dark Mode',
-                  trailing: Switch(
-                    value: provider.isDarkMode,
-                    onChanged: (value) {
-                      provider.changeTheme(
-                        value ? ThemeMode.dark : ThemeMode.light,
-                      );
-                    },
-                  ),
+                  context: context,
+                  icon: Iconsax.info_circle_outline,
+                  title: "About Us",
+                  onTap: () {},
+                ),
+                _buildDrawerItem(
+                  context: context,
+                  icon: Iconsax.call_outline,
+                  title: "Contact Support",
+                  onTap: () {},
                 ),
               ],
             ),
           ),
 
-          // زر تسجيل الخروج
           Padding(
             padding: const EdgeInsets.all(20.0),
-            child: ListTile(
+            child: InkWell(
               onTap: () async {
-                if (context.mounted) {
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    AppRouter.login,
-                        (route) => false,
-                  );
+                bool? confirm = await showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text("Logout"),
+                    content: const Text("Are you sure you want to logout?"),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text("Cancel"),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text(
+                          "Logout",
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm == true) {
+                  await TokenManager.clearTokens();
+                  if (context.mounted) {
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      AppRouter.login,
+                      (route) => false,
+                    );
+                  }
                 }
               },
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-                side: BorderSide(color: Colors.red.withOpacity(0.5)),
-              ),
-              leading: const Icon(Iconsax.logout_outline, color: Colors.red),
-              title: Text(
-                provider.isArabic ? 'تسجيل الخروج' : 'Logout',
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.red.withOpacity(0.2)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Iconsax.logout_outline,
+                      color: Colors.red,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      "Logout",
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -164,24 +143,96 @@ class CustomDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawerItem(
-      BuildContext context, {
-        required IconData icon,
-        required String title,
-        required Widget trailing,
-      }) {
-    final theme = Theme.of(context);
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 5),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(15),
+  Widget _buildHeader(
+    BuildContext context,
+    ThemeData theme,
+    SettingsProvider provider,
+  ) {
+    List<Color> currentGradient = provider.isDarkMode
+        ? AppColors.gradientDark
+        : AppColors.gradientLight;
+
+    return FutureBuilder<UserModel>(
+      future: ProfileService().getProfile(),
+      builder: (context, snapshot) {
+        final user = snapshot.data;
+        return Container(
+          padding: const EdgeInsets.only(
+            top: 80,
+            bottom: 40,
+            left: 20,
+            right: 20,
+          ),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              end: Alignment.topCenter,
+              begin: Alignment.bottomCenter,
+              colors: currentGradient,
+            ),
+            borderRadius: const BorderRadius.only(
+              bottomRight: Radius.circular(30),
+            ),
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 35,
+                backgroundColor: theme.colorScheme.primary,
+                child: const Icon(Icons.person, size: 40, color: Colors.white),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user?.fullName ?? "Loading...",
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: provider.isDarkMode
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                    ),
+                    Text(
+                      user?.email ?? "User Profile",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDrawerItem({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Color? color,
+  }) {
+    var isDark = Provider.of<SettingsProvider>(context).isDarkMode;
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: color ?? (isDark ? Colors.white70 : Colors.grey[700]),
       ),
-      child: ListTile(
-        leading: Icon(icon, color: theme.colorScheme.primary),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
-        trailing: trailing,
+      title: Text(
+        title,
+        style: TextStyle(
+          color: color ?? (isDark ? Colors.white : Colors.black87),
+          fontWeight: FontWeight.w500,
+        ),
       ),
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 25),
+      visualDensity: const VisualDensity(vertical: -1),
     );
   }
 }

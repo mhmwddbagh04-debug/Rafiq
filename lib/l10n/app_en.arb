@@ -37,7 +37,7 @@
   "passwordRequired": "Password is required",
   "passwordWeak": "Weak password, must contain at least 8 characters with uppercase, lowercase, number and special symbol",
   "passwordMismatch": "Passwords do not match",
-
+  "pleaseEnterYourEmail": "Please enter your email",
   "loginFailed": "Login failed",
   "formInvalid": "Please correct the errors in the form",
 
