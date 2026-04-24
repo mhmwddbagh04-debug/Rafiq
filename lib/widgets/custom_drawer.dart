@@ -31,15 +31,27 @@ class CustomDrawer extends StatelessWidget {
               children: [
                 _buildDrawerItem(
                   context: context,
+                  icon: Iconsax.user_edit_outline,
+                  title: local.editProfile,
+                  onTap: () {
+                    Navigator.pushNamed(context, AppRouter.editProfile);
+                  },
+                ),
+                _buildDrawerItem(
+                  context: context,
                   icon: Iconsax.box_outline,
-                  title: "My Orders",
-                  onTap: () {},
+                  title: local.myOrders,
+                  onTap: () {
+                    Navigator.pushNamed(context, AppRouter.orders);
+                  },
                 ),
                 _buildDrawerItem(
                   context: context,
                   icon: Iconsax.heart_outline,
-                  title: "Wishlist",
-                  onTap: () {},
+                  title: local.wishlist,
+                  onTap: () {
+                    Navigator.pushNamed(context, AppRouter.wishlist);
+                  },
                 ),
 
                 const Divider(indent: 20, endIndent: 20),
@@ -49,7 +61,7 @@ class CustomDrawer extends StatelessWidget {
                     vertical: 10,
                   ),
                   child: Text(
-                    "Support & Info",
+                    local.supportAndInfo,
                     style: theme.textTheme.labelLarge?.copyWith(
                       color: Colors.grey,
                     ),
@@ -58,14 +70,18 @@ class CustomDrawer extends StatelessWidget {
                 _buildDrawerItem(
                   context: context,
                   icon: Iconsax.info_circle_outline,
-                  title: "About Us",
-                  onTap: () {},
+                  title: local.aboutUs,
+                  onTap: () {
+                    Navigator.pushNamed(context, AppRouter.aboutUs);
+                  },
                 ),
                 _buildDrawerItem(
                   context: context,
                   icon: Iconsax.call_outline,
-                  title: "Contact Support",
-                  onTap: () {},
+                  title: local.contactSupport,
+                  onTap: () {
+                    Navigator.pushNamed(context, AppRouter.contactSupport);
+                  },
                 ),
               ],
             ),
@@ -78,18 +94,18 @@ class CustomDrawer extends StatelessWidget {
                 bool? confirm = await showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: const Text("Logout"),
-                    content: const Text("Are you sure you want to logout?"),
+                    title: Text(local.logout),
+                    content: Text(local.logoutConfirm),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: const Text("Cancel"),
+                        child: Text(local.cancel),
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(context, true),
-                        child: const Text(
-                          "Logout",
-                          style: TextStyle(color: Colors.red),
+                        child: Text(
+                          local.logout,
+                          style: const TextStyle(color: Colors.red),
                         ),
                       ),
                     ],
@@ -127,7 +143,7 @@ class CustomDrawer extends StatelessWidget {
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      "Logout",
+                      local.logout,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: Colors.red,
                         fontWeight: FontWeight.bold,
@@ -156,54 +172,62 @@ class CustomDrawer extends StatelessWidget {
       future: ProfileService().getProfile(),
       builder: (context, snapshot) {
         final user = snapshot.data;
-        return Container(
-          padding: const EdgeInsets.only(
-            top: 80,
-            bottom: 40,
-            left: 20,
-            right: 20,
-          ),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              end: Alignment.topCenter,
-              begin: Alignment.bottomCenter,
-              colors: currentGradient,
+        return InkWell(
+          onTap: () => Navigator.pushNamed(context, AppRouter.editProfile),
+          child: Container(
+            padding: const EdgeInsets.only(
+              top: 80,
+              bottom: 40,
+              left: 20,
+              right: 20,
             ),
-            borderRadius: const BorderRadius.only(
-              bottomRight: Radius.circular(30),
-            ),
-          ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 35,
-                backgroundColor: theme.colorScheme.primary,
-                child: const Icon(Icons.person, size: 40, color: Colors.white),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                end: Alignment.topCenter,
+                begin: Alignment.bottomCenter,
+                colors: currentGradient,
               ),
-              const SizedBox(width: 15),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      user?.fullName ?? "Loading...",
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: provider.isDarkMode
-                            ? Colors.white
-                            : Colors.black,
-                      ),
-                    ),
-                    Text(
-                      user?.email ?? "User Profile",
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
+              borderRadius: const BorderRadius.only(
+                bottomRight: Radius.circular(30),
+              ),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 35,
+                  backgroundColor: theme.colorScheme.primary,
+                  child: const Icon(Icons.person, size: 40, color: Colors.white),
                 ),
-              ),
-            ],
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user?.fullName ?? "Loading...",
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: provider.isDarkMode
+                              ? Colors.white
+                              : Colors.black,
+                        ),
+                      ),
+                      Text(
+                        user?.email ?? "User Profile",
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Iconsax.arrow_right_3_outline,
+                  size: 18,
+                  color: provider.isDarkMode ? Colors.white54 : Colors.grey,
+                ),
+              ],
+            ),
           ),
         );
       },

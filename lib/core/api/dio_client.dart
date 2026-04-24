@@ -1,10 +1,16 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import '../app_router.dart';
 import 'token_manager.dart';
 
 class DioClient {
   static const String _baseUrl = "https://rafiq1.runasp.net/api";
   static final Dio _dio = _createDio();
   static bool _isRefreshing = false;
+  static Completer<bool>? _refreshCompleter;
+
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   static Dio _createDio() {
     final dio = Dio(
@@ -25,8 +31,7 @@ class DioClient {
           final token = await TokenManager.getToken();
           if (token != null && token.isNotEmpty) {
             options.headers["Authorization"] = "Bearer $token";
-
-            // طباعة الوقت المتبقي للتوكن للمراقبة
+            
             final remaining = TokenManager.getTokenRemainingTime(token);
             print("⏳ [Token Status] Remaining: $remaining");
           }
@@ -34,33 +39,30 @@ class DioClient {
           return handler.next(options);
         },
         onError: (DioException e, handler) async {
-          // إذا انتهت صلاحية التوكن (401)
-          if (e.response?.statusCode == 401 && !_isRefreshing) {
+          if (e.response?.statusCode == 401) {
+            
+            if (_isRefreshing) {
+              print("⏳ [Auth Wait] Waiting for ongoing refresh: ${e.requestOptions.path}");
+              final success = await _refreshCompleter?.future;
+              if (success == true) {
+                return _retryOriginalRequest(e.requestOptions, handler);
+              } else {
+                return handler.next(e);
+              }
+            }
+
             _isRefreshing = true;
-            print(
-              "⚠️ [401 Error] Unauthorized! Attempting to refresh token...",
-            );
+            _refreshCompleter = Completer<bool>();
+            print("⚠️ [Auth] 401 Detected. Starting Refresh Process...");
 
             try {
               final oldToken = await TokenManager.getToken();
               final oldRefreshToken = await TokenManager.getRefreshToken();
 
-              if (oldToken != null) {
-                final expiry = TokenManager.getTokenExpiryDate(oldToken);
-                print("📅 [Expired Token Info] Expiry Date: $expiry");
-              }
-
               if (oldToken != null && oldRefreshToken != null) {
-                // نستخدم Dio منفصل لعملية الريفريش لتجنب التداخل
-                final refreshDio = Dio(
-                  BaseOptions(
-                    baseUrl: _baseUrl,
-                    headers: {'Content-Type': 'application/json'},
-                  ),
-                );
-
+                final refreshDio = Dio();
                 final response = await refreshDio.post(
-                  "/Identity/Account/refresh",
+                  "$_baseUrl/Identity/Account/refresh",
                   data: {
                     "accessToken": oldToken,
                     "refreshToken": oldRefreshToken,
@@ -71,38 +73,44 @@ class DioClient {
                   final newAccessToken = response.data['accessToken'];
                   final newRefreshToken = response.data['refreshToken'];
 
-                  final newExpiry = TokenManager.getTokenExpiryDate(
-                    newAccessToken,
-                  );
-                  print("✅ [Refresh Success] New Expiry: $newExpiry");
-
-                  // حفظ التوكنات الجديدة
                   await TokenManager.saveToken(newAccessToken);
                   await TokenManager.saveRefreshToken(newRefreshToken);
 
-                  // تحديث هيدر الطلب الحالي بالتوكن الجديد
-                  e.requestOptions.headers["Authorization"] =
-                      "Bearer $newAccessToken";
+                  print("✅ [Auth] Refresh Successful. Retrying all requests...");
+                  
+                  _isRefreshing = false;
+                  _refreshCompleter?.complete(true);
+                  _refreshCompleter = null;
 
-                  // إعادة إرسال الطلب الأصلي
-                  final retryResponse = await dio.request(
-                    e.requestOptions.path,
-                    options: Options(
-                      method: e.requestOptions.method,
-                      headers: e.requestOptions.headers,
-                    ),
-                    data: e.requestOptions.data,
-                    queryParameters: e.requestOptions.queryParameters,
-                  );
-
-                  return handler.resolve(retryResponse);
+                  return _retryOriginalRequest(e.requestOptions, handler);
                 }
               }
-            } catch (refreshError) {
-              print("❌ [Refresh Error] Critical failure: $refreshError");
-              await TokenManager.clearTokens();
-            } finally {
+              
               _isRefreshing = false;
+              _refreshCompleter?.complete(false);
+              _refreshCompleter = null;
+              return handler.next(e);
+
+            } on DioException catch (refreshErr) {
+              _isRefreshing = false;
+              _refreshCompleter?.complete(false);
+              _refreshCompleter = null;
+              print("❌ [Auth Refresh Error]: ${refreshErr.response?.statusCode} - ${refreshErr.response?.data}");
+              
+              if (refreshErr.response?.statusCode == 400) {
+                print("🚨 [Auth] Refresh Token Invalid/Mismatch. User must re-login.");
+                await TokenManager.clearTokens();
+                if (navigatorKey.currentState != null) {
+                  navigatorKey.currentState!.pushNamedAndRemoveUntil(AppRouter.login, (route) => false);
+                }
+              }
+              return handler.next(e);
+            } catch (err) {
+              _isRefreshing = false;
+              _refreshCompleter?.complete(false);
+              _refreshCompleter = null;
+              print("❌ [Auth Unexpected Error]: $err");
+              return handler.next(e);
             }
           }
           return handler.next(e);
@@ -111,6 +119,27 @@ class DioClient {
     );
 
     return dio;
+  }
+
+  static Future<void> _retryOriginalRequest(RequestOptions requestOptions, ErrorInterceptorHandler handler) async {
+    print("🔁 [Retry] Retrying original request: ${requestOptions.path}");
+    final token = await TokenManager.getToken();
+    
+    try {
+      final response = await _dio.request(
+        requestOptions.path,
+        data: requestOptions.data,
+        queryParameters: requestOptions.queryParameters,
+        options: Options(
+          method: requestOptions.method,
+          headers: {...requestOptions.headers, "Authorization": "Bearer $token"},
+        ),
+      );
+      return handler.resolve(response);
+    } catch (err) {
+      if (err is DioException) return handler.next(err);
+      return handler.reject(DioException(requestOptions: requestOptions, error: err));
+    }
   }
 
   static Dio get instance => _dio;

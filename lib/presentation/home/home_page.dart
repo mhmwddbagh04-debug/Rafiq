@@ -1,5 +1,6 @@
 import 'package:Rafiq/core/app_colors.dart';
 import 'package:Rafiq/core/app_router.dart';
+import 'package:Rafiq/core/cart_provider.dart';
 import 'package:Rafiq/core/settings_provider.dart';
 import 'package:Rafiq/l10n/app_localizations.dart';
 import 'package:Rafiq/presentation/home/tabs/home_tab.dart';
@@ -30,9 +31,16 @@ class _HomePageState extends State<HomePage> {
   int currentIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<CartProvider>(context, listen: false).fetchCart();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
-    var local = AppLocalizations.of(context)!;
     var provider = Provider.of<SettingsProvider>(context);
 
     return Scaffold(
@@ -40,40 +48,67 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: provider.isDarkMode
           ? AppColors.backgroundDark
           : theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Iconsax.menu_outline),
-            onPressed: () => Scaffold.of(context).openDrawer(),
+      // نغلف الـ AppBar بـ Directionality LTR ليبقى ثابتاً دائماً
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: AppBar(
+            leading: Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Iconsax.menu_outline),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+            ),
+            elevation: 0,
+            backgroundColor: provider.isDarkMode
+                ? AppColors.backgroundDark
+                : const Color(0xFFDCF8FC),
+            centerTitle: false,
+            title: Image.asset(
+              !provider.isDarkMode
+                  ? 'assets/image/rafiq2.png'
+                  : 'assets/image/Copilot_20260417_184551.png',
+              width: 70,
+              height: 40,
+            ),
+            actions: [
+              IconButton(
+                icon: Icon(
+                  provider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                ),
+                onPressed: () => provider.changeTheme(
+                  provider.isDarkMode ? ThemeMode.light : ThemeMode.dark,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.language),
+                onPressed: () {
+                  provider.changeLanguage(provider.isArabic ? 'en' : 'ar');
+                },
+              ),
+              Consumer<CartProvider>(
+                builder: (context, cart, child) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: Badge(
+                      label: Text('${cart.itemCount}'),
+                      isLabelVisible: cart.itemCount > 0,
+                      backgroundColor: Colors.red,
+                      child: IconButton(
+                        icon: const Icon(Icons.shopping_cart_outlined),
+                        onPressed: () {
+                          Navigator.pushNamed(context, AppRouter.cart);
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 5),
+            ],
           ),
         ),
-        elevation: 0, 
-        backgroundColor: provider.isDarkMode
-            ? AppColors.backgroundDark
-            : const Color(0xFFDCF8FC),
-        
-        centerTitle: false,
-        title: Image.asset(!provider.isDarkMode?'assets/image/rafiq2.png':'assets/image/Copilot_20260417_184551.png', width: 70, height: 40),
-        
-        actions: [
-          IconButton(
-            icon: Icon(provider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
-            onPressed: () => provider.changeTheme(provider.isDarkMode ? ThemeMode.light : ThemeMode.dark),
-          ),
-          IconButton(
-            icon: const Icon(Icons.language),
-            onPressed: () {
-              provider.changeLanguage(provider.isArabic ? 'en' : 'ar');
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined), 
-            onPressed: () {
-              // مسار السلة مستقبلاً
-            }
-          ),
-          const SizedBox(width: 5),
-        ],
       ),
       body: _pages[currentIndex],
       floatingActionButton: FloatingActionButton(
@@ -90,10 +125,26 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: CurvedNavigationBar(
         height: 70,
         items: [
-          Icon(Iconsax.home_1_outline, color: provider.isDarkMode ? Colors.white : Colors.indigo, size: 30),
-          Icon(Icons.search, color: provider.isDarkMode ? Colors.white :Colors.indigo, size: 30),
-          Icon(Icons.favorite_border, color: provider.isDarkMode ? Colors.white : Colors.indigo,  size: 30),
-          Icon(Icons.local_pharmacy_outlined,color: provider.isDarkMode ? Colors.white : Colors.indigo, size: 30),
+          Icon(
+            Iconsax.home_1_outline,
+            color: provider.isDarkMode ? Colors.white : Colors.indigo,
+            size: 30,
+          ),
+          Icon(
+            Icons.search,
+            color: provider.isDarkMode ? Colors.white : Colors.indigo,
+            size: 30,
+          ),
+          Icon(
+            Icons.favorite_border,
+            color: provider.isDarkMode ? Colors.white : Colors.indigo,
+            size: 30,
+          ),
+          Icon(
+            Icons.local_pharmacy_outlined,
+            color: provider.isDarkMode ? Colors.white : Colors.indigo,
+            size: 30,
+          ),
         ],
         animationCurve: Curves.fastOutSlowIn,
         animationDuration: const Duration(milliseconds: 600),
@@ -101,9 +152,13 @@ class _HomePageState extends State<HomePage> {
         onTap: (index) {
           setState(() => currentIndex = index);
         },
-        color:provider.isDarkMode ? const Color(0xff173E90) : const Color(0xFFDCF8FC),
+        color: provider.isDarkMode
+            ? const Color(0xff173E90)
+            : const Color(0xFFDCF8FC),
         backgroundColor: Colors.transparent,
-        buttonBackgroundColor: provider.isDarkMode ? const Color(0xff173E90) : const Color(0xFFDCF8FC),
+        buttonBackgroundColor: provider.isDarkMode
+            ? const Color(0xff173E90)
+            : const Color(0xFFDCF8FC),
         letIndexChange: (index) => true,
       ),
     );

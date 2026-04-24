@@ -1,9 +1,11 @@
 import 'package:Rafiq/core/app_colors.dart';
+import 'package:Rafiq/core/cart_provider.dart';
 import 'package:Rafiq/core/favorite_provider.dart';
 import 'package:Rafiq/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'core/api/dio_client.dart';
 import 'core/app_router.dart';
 import 'core/settings_provider.dart';
 
@@ -14,6 +16,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (context) => SettingsProvider()),
         ChangeNotifierProvider(create: (context) => FavoriteProvider()),
+        ChangeNotifierProvider(create: (context) => CartProvider()),
       ],
       child: const MyApp(),
     ),
@@ -28,6 +31,7 @@ class MyApp extends StatelessWidget {
     var provider = Provider.of<SettingsProvider>(context);
 
     return MaterialApp(
+      navigatorKey: DioClient.navigatorKey, // ربط الـ NavigatorKey
       debugShowCheckedModeBanner: false,
       title: 'Rafiq',
       locale: provider.currentLocale,

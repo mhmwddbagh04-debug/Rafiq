@@ -1,7 +1,9 @@
 import 'package:Rafiq/core/api/home_service.dart';
 import 'package:Rafiq/core/app_colors.dart';
+import 'package:Rafiq/core/favorite_provider.dart';
 import 'package:Rafiq/core/settings_provider.dart';
 import 'package:Rafiq/data/models/home_model.dart';
+import 'package:Rafiq/l10n/app_localizations.dart';
 import 'package:Rafiq/widgets/state_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -21,12 +23,9 @@ class _ItemScreenState extends State<ItemScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // إذا لم نكن قد جلبنا البيانات الكاملة بعد
     if (_fullProduct == null) {
       final product = ModalRoute.of(context)!.settings.arguments as Product;
       _fullProduct = product;
-      
-      // إذا كان الوصف ناقصاً، نقوم بجلب البيانات الكاملة
       if (_fullProduct!.description == null || _fullProduct!.description!.isEmpty) {
         _fetchProductDetails();
       }
@@ -36,9 +35,8 @@ class _ItemScreenState extends State<ItemScreen> {
   Future<void> _fetchProductDetails() async {
     setState(() => _isLoading = true);
     try {
-      // بما أن الباك اند يوفر الوصف في قائمة كل المنتجات فقط، سنبحث عنه هناك
-      final allProducts = await HomeService().getAllProducts();
-      final matchingProduct = allProducts.firstWhere(
+      final response = await HomeService().getAllProducts(page: 1, pageSize: 50);
+      final matchingProduct = response.products.firstWhere(
         (p) => p.id == _fullProduct!.id,
         orElse: () => _fullProduct!,
       );
@@ -51,7 +49,6 @@ class _ItemScreenState extends State<ItemScreen> {
       }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
-      debugPrint("Error fetching product description: $e");
     }
   }
 
@@ -59,6 +56,7 @@ class _ItemScreenState extends State<ItemScreen> {
   Widget build(BuildContext context) {
     if (_fullProduct == null) return const Scaffold(body: LoadingWidget());
     
+    final local = AppLocalizations.of(context)!;
     var provider = Provider.of<SettingsProvider>(context);
     var theme = Theme.of(context);
 
@@ -71,9 +69,17 @@ class _ItemScreenState extends State<ItemScreen> {
           icon: Icon(Icons.arrow_back_ios_new, color: theme.colorScheme.primary),
         ),
         actions: [
-          IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.favorite_border, color: theme.colorScheme.primary),
+          Consumer<FavoriteProvider>(
+            builder: (context, favProvider, child) {
+              bool isFavorite = favProvider.isFavorite(_fullProduct!.id);
+              return IconButton(
+                onPressed: () => favProvider.toggleFavorite(_fullProduct!),
+                icon: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorite ? Colors.red : theme.colorScheme.primary,
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -99,7 +105,7 @@ class _ItemScreenState extends State<ItemScreen> {
                 child: Hero(
                   tag: 'product-${_fullProduct!.id}',
                   child: Image.network(
-                    "https://rafiq1.runasp.net/medicinee_images/${_fullProduct!.imageUrl}",
+                    "https://rafiq1.runasp.net/Images/${_fullProduct!.imageUrl}",
                     width: double.infinity,
                     height: double.infinity,
                     fit: BoxFit.cover,
@@ -126,7 +132,7 @@ class _ItemScreenState extends State<ItemScreen> {
                         ),
                       ),
                       Text(
-                        "${_fullProduct!.price} EGP",
+                        "${_fullProduct!.price} ${local.egp}",
                         style: theme.textTheme.headlineSmall?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.bold,
@@ -137,12 +143,12 @@ class _ItemScreenState extends State<ItemScreen> {
                   const SizedBox(height: 10),
                   if (_fullProduct!.totalSold > 0)
                     Text(
-                      "Sold: ${_fullProduct!.totalSold}",
+                      "${local.sold}: ${_fullProduct!.totalSold}",
                       style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
                     ),
                   const SizedBox(height: 20),
                   Text(
-                    "Description",
+                    local.description,
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
@@ -152,7 +158,7 @@ class _ItemScreenState extends State<ItemScreen> {
                         child: LinearProgressIndicator(),
                       )
                     : Text(
-                        _fullProduct!.description ?? "No description available for this product.",
+                        _fullProduct!.description ?? "No description available",
                         style: const TextStyle(height: 1.5, fontSize: 15),
                       ),
 
@@ -194,9 +200,9 @@ class _ItemScreenState extends State<ItemScreen> {
                               borderRadius: BorderRadius.circular(15),
                             ),
                           ),
-                          child: const Text(
-                            "Add to Cart",
-                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          child: Text(
+                            local.addToCart,
+                            style: const TextStyle(color: Colors.white, fontSize: 16),
                           ),
                         ),
                       ),

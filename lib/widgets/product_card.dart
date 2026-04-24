@@ -1,15 +1,17 @@
 import 'package:Rafiq/core/app_colors.dart';
 import 'package:Rafiq/core/app_router.dart';
+import 'package:Rafiq/core/cart_provider.dart';
 import 'package:Rafiq/core/favorite_provider.dart';
 import 'package:Rafiq/core/settings_provider.dart';
 import 'package:Rafiq/data/models/home_model.dart';
+import 'package:Rafiq/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 
-class ProductCard extends StatelessWidget {
+class ProductCard extends StatefulWidget {
   final Product product;
   final String heroPrefix;
   final double? width;
@@ -22,20 +24,28 @@ class ProductCard extends StatelessWidget {
   });
 
   @override
+  State<ProductCard> createState() => _ProductCardState();
+}
+
+class _ProductCardState extends State<ProductCard> {
+  bool _isAdding = false;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final provider = Provider.of<SettingsProvider>(context);
+    final local = AppLocalizations.of(context)!;
 
-    return Consumer<FavoriteProvider>(
-      builder: (context, favProvider, child) {
-        bool isFavorite = favProvider.isFavorite(product.id);
+    return Consumer2<FavoriteProvider, CartProvider>(
+      builder: (context, favProvider, cartProvider, child) {
+        bool isFavorite = favProvider.isFavorite(widget.product.id);
 
         return InkWell(
           onTap: () {
-            Navigator.pushNamed(context, AppRouter.item, arguments: product);
+            Navigator.pushNamed(context, AppRouter.item, arguments: widget.product);
           },
           child: Container(
-            width: width,
+            width: widget.width,
             decoration: BoxDecoration(
               color: provider.isDarkMode ? AppColors.cardDark : Colors.white,
               borderRadius: BorderRadius.circular(20),
@@ -57,56 +67,47 @@ class ProductCard extends StatelessWidget {
                       Expanded(
                         child: Center(
                           child: Hero(
-                            tag: '$heroPrefix-${product.id}',
-                            child: CachedNetworkImage(
-                              imageUrl: "https://rafiq1.runasp.net/medicinee_images/${product.imageUrl}",
-                              fit: BoxFit.contain,
-                              placeholder: (context, url) => Shimmer.fromColors(
-                                baseColor: provider.isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
-                                highlightColor: provider.isDarkMode ? Colors.grey[700]! : Colors.grey[100]!,
-                                child: Container(color: Colors.white, width: double.infinity, height: double.infinity),
-                              ),
-                              errorWidget: (context, url, error) => const Icon(Icons.medication, size: 50, color: Colors.grey),
-                            ),
+                            tag: '${widget.heroPrefix}-${widget.product.id}',
+                            child: _buildProductImage(provider.isDarkMode),
                           ),
                         ),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        product.name,
+                        widget.product.name,
                         maxLines: 1,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        "Medicine",
-                        style: theme.textTheme.labelSmall?.copyWith(color: Colors.grey),
-                      ),
+                      Text(local.pharmacy, style: theme.textTheme.labelSmall?.copyWith(color: Colors.grey)),
                       const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            "${product.price.toStringAsFixed(2)} EGP",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
-                              fontSize: 13,
-                            ),
+                            "${widget.product.price.toStringAsFixed(2)} ${local.egp}",
+                            style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary, fontSize: 13),
                           ),
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(
-                              Iconsax.shopping_cart_outline,
-                              size: 18,
-                              color: Colors.white,
+                          GestureDetector(
+                            onTap: _isAdding ? null : () async {
+                              setState(() => _isAdding = true);
+                              await cartProvider.addItem(widget.product);
+                              if (mounted) {
+                                setState(() => _isAdding = false);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("${widget.product.name} ${local.addedToCart}")),
+                                );
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: _isAdding 
+                                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                : const Icon(Iconsax.shopping_cart_outline, size: 18, color: Colors.white),
                             ),
                           ),
                         ],
@@ -118,7 +119,7 @@ class ProductCard extends StatelessWidget {
                   top: 10,
                   right: 10,
                   child: GestureDetector(
-                    onTap: () => favProvider.toggleFavorite(product),
+                    onTap: () => favProvider.toggleFavorite(widget.product),
                     child: Container(
                       padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
@@ -137,6 +138,36 @@ class ProductCard extends StatelessWidget {
             ),
           ),
         );
+      },
+    );
+  }
+
+  Widget _buildProductImage(bool isDarkMode) {
+    String rawImageUrl = widget.product.imageUrl.trim();
+    
+    // طباعة رابط الصورة الحالي لنتأكد ماذا يصلنا من السيرفر في صفحة الأقسام
+    print("📸 [DEBUG] Product: ${widget.product.name}, ImagePath: '$rawImageUrl'");
+
+    if (rawImageUrl.isEmpty || rawImageUrl == "null") {
+      return const Icon(Icons.medication, size: 50, color: Colors.grey);
+    }
+
+    String imgUrl = rawImageUrl;
+    if (!imgUrl.startsWith("http")) {
+      imgUrl = "https://rafiq1.runasp.net/Images/$imgUrl";
+    }
+
+    return CachedNetworkImage(
+      imageUrl: imgUrl,
+      fit: BoxFit.contain,
+      placeholder: (context, url) => Shimmer.fromColors(
+        baseColor: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
+        highlightColor: isDarkMode ? Colors.grey[700]! : Colors.grey[100]!,
+        child: Container(color: Colors.white, width: double.infinity, height: double.infinity),
+      ),
+      errorWidget: (context, url, error) {
+         print("❌ [DEBUG] Image Load Failed: $url");
+         return const Icon(Icons.medication, size: 50, color: Colors.grey);
       },
     );
   }

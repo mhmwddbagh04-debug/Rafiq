@@ -20,22 +20,42 @@ class PharmacyTab extends StatefulWidget {
 }
 
 class _PharmacyTabState extends State<PharmacyTab> {
-  late Future<List<Product>> _productsFuture;
+  late Future<PaginatedProductResponse> _productsFuture;
   late Future<HomeResponse> _homeDataFuture;
+  late Future<List<Category>> _categoriesFuture;
 
   @override
   void initState() {
     super.initState();
-    _productsFuture = HomeService().getAllProducts();
+    _loadData();
+  }
+
+  void _loadData() {
+    _productsFuture = HomeService().getAllProducts(page: 1, pageSize: 8);
     _homeDataFuture = HomeService().getHomeData();
+    _categoriesFuture = HomeService().getCategories();
   }
 
   Future<void> _refreshData() async {
     setState(() {
-      _productsFuture = HomeService().getAllProducts();
-      _homeDataFuture = HomeService().getHomeData();
+      _loadData();
     });
-    await Future.wait([_productsFuture, _homeDataFuture]);
+    await Future.wait([_productsFuture, _homeDataFuture, _categoriesFuture]);
+  }
+
+  Map<String, dynamic> _getCategoryStyle(String name) {
+    name = name.toLowerCase();
+    if (name.contains('medicine') || name.contains('دواء')) {
+      return {'img': 'assets/image/medicin.png', 'color': const Color(0xFFE3F2FD)};
+    } else if (name.contains('hair') || name.contains('شعر')) {
+      return {'img': 'assets/image/haircare.png', 'color': const Color(0xFFF3E5F5)};
+    } else if (name.contains('skin') || name.contains('بشرة')) {
+      return {'img': 'assets/image/skincare.png', 'color': const Color(0xFFE8F5E9)};
+    } else if (name.contains('makeup') || name.contains('مكياج')) {
+      return {'img': 'assets/image/makeup.png', 'color': const Color(0xFFFFF3E0)};
+    } else {
+      return {'img': 'assets/image/medicin.png', 'color': Colors.grey[100]};
+    }
   }
 
   @override
@@ -43,13 +63,6 @@ class _PharmacyTabState extends State<PharmacyTab> {
     final provider = Provider.of<SettingsProvider>(context);
     final local = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-
-    final List<Map<String, dynamic>> categories = [
-      {'name': 'Medicine', 'image': 'assets/image/medicin.png', 'color': const Color(0xFFE3F2FD)},
-      {'name': 'Hair care', 'image': 'assets/image/haircare.png', 'color': const Color(0xFFF3E5F5)},
-      {'name': 'Skin care', 'image': 'assets/image/skincare.png', 'color': const Color(0xFFE8F5E9)},
-      {'name': 'Makeup', 'image': 'assets/image/makeup.png', 'color': const Color(0xFFFFF3E0)},
-    ];
 
     return Container(
       decoration: BoxDecoration(
@@ -86,40 +99,38 @@ class _PharmacyTabState extends State<PharmacyTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      local.categories,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
+                    Text(local.categories, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
                     const SizedBox(height: 20),
-                    _buildCircularCategories(context, categories, provider),
+                    FutureBuilder<List<Category>>(
+                      future: _categoriesFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const SizedBox(height: 110, child: Center(child: CircularProgressIndicator()));
+                        }
+                        if (snapshot.hasData) return _buildCircularCategories(context, snapshot.data!, provider);
+                        return const SizedBox.shrink();
+                      },
+                    ),
                     const SizedBox(height: 35),
                     _buildSecHeader(theme, local.products, local),
                     const SizedBox(height: 14),
                     
-                    FutureBuilder<List<Product>>(
+                    FutureBuilder<PaginatedProductResponse>(
                       future: _productsFuture,
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: Padding(
-                            padding: EdgeInsets.all(40.0),
-                            child: CircularProgressIndicator(),
-                          ));
+                          return const Center(child: Padding(padding: EdgeInsets.all(40.0), child: CircularProgressIndicator()));
                         } else if (snapshot.hasError) {
-                          return ErrorStateWidget(
-                            errorMessage: snapshot.error.toString(),
-                            onRetry: _refreshData,
-                          );
-                        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return ErrorStateWidget(errorMessage: snapshot.error.toString(), onRetry: _refreshData);
+                        } else if (!snapshot.hasData || snapshot.data!.products.isEmpty) {
                           return const Center(child: Text("No products found"));
                         }
 
+                        final products = snapshot.data!.products;
                         return GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          itemCount: snapshot.data!.length,
+                          itemCount: products.length,
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             childAspectRatio: 0.7,
@@ -127,12 +138,13 @@ class _PharmacyTabState extends State<PharmacyTab> {
                             mainAxisSpacing: 15,
                           ),
                           itemBuilder: (context, index) => ProductCard(
-                            product: snapshot.data![index],
+                            product: products[index],
                             heroPrefix: 'pharmacy',
                           ),
                         );
                       },
                     ),
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
@@ -162,35 +174,62 @@ class _PharmacyTabState extends State<PharmacyTab> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
-        TextButton(onPressed: () {}, child: Text(local.viewAll, style: TextStyle(color: theme.colorScheme.secondary))),
+        TextButton(
+          onPressed: () {
+            Navigator.pushNamed(context, AppRouter.allProducts, arguments: {'title': title, 'categoryId': null});
+          },
+          child: Text(local.viewAll, style: TextStyle(color: theme.colorScheme.secondary)),
+        ),
       ],
     );
   }
 
-  Widget _buildCircularCategories(BuildContext context, List<Map<String, dynamic>> categories, SettingsProvider provider) {
+  Widget _buildCircularCategories(BuildContext context, List<Category> categories, SettingsProvider provider) {
     return SizedBox(
       height: 110,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
         separatorBuilder: (_, __) => const SizedBox(width: 20),
-        itemBuilder: (context, index) => InkWell(
-          onTap: () => Navigator.pushNamed(context, AppRouter.allProducts, arguments: {'title': categories[index]['name']!, 'products': <Product>[]}),
-          child: Column(
-            children: [
-              Container(
-                width: 75, height: 75,
-                decoration: BoxDecoration(
-                  color: provider.isDarkMode ? categories[index]['color'].withValues(alpha: 0.1) : categories[index]['color'],
-                  shape: BoxShape.circle,
+        itemBuilder: (context, index) {
+          final category = categories[index];
+          final style = _getCategoryStyle(category.name);
+          return InkWell(
+            onTap: () {
+               // نرسل الـ ID والاسم والافتراض أن الصفحة التالية ستجلب المنتجات بصورها
+               Navigator.pushNamed(context, AppRouter.allProducts, arguments: {
+                 'title': category.name, 
+                 'categoryId': category.id
+               });
+            },
+            child: Column(
+              children: [
+                Container(
+                  width: 75, height: 75,
+                  decoration: BoxDecoration(
+                    color: provider.isDarkMode ? (style['color'] as Color).withValues(alpha: 0.1) : style['color'],
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Image.asset(style['img'], fit: BoxFit.contain),
+                    ),
+                  ),
                 ),
-                child: Center(child: Padding(padding: const EdgeInsets.all(12.0), child: Image.asset(categories[index]['image']!, fit: BoxFit.contain))),
-              ),
-              const SizedBox(height: 8),
-              Text(categories[index]['name']!, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: provider.isDarkMode ? Colors.white70 : Colors.black87)),
-            ],
-          ),
-        ),
+                const SizedBox(height: 8),
+                Text(
+                  category.name,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: provider.isDarkMode ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
