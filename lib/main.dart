@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
     var provider = Provider.of<SettingsProvider>(context);
 
     return MaterialApp(
-      navigatorKey: DioClient.navigatorKey, // ربط الـ NavigatorKey
+      navigatorKey: DioClient.navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Rafiq',
       locale: provider.currentLocale,

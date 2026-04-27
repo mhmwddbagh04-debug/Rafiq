@@ -15,12 +15,14 @@ class ProductCard extends StatefulWidget {
   final Product product;
   final String heroPrefix;
   final double? width;
+  final VoidCallback? onTap; // إضافة هذا الباراميتر
 
   const ProductCard({
     super.key,
     required this.product,
     this.heroPrefix = 'product',
     this.width,
+    this.onTap,
   });
 
   @override
@@ -41,7 +43,7 @@ class _ProductCardState extends State<ProductCard> {
         bool isFavorite = favProvider.isFavorite(widget.product.id);
 
         return InkWell(
-          onTap: () {
+          onTap: widget.onTap ?? () { // استخدام onTap الممرر أو الافتراضي
             Navigator.pushNamed(context, AppRouter.item, arguments: widget.product);
           },
           child: Container(
@@ -89,15 +91,22 @@ class _ProductCardState extends State<ProductCard> {
                             style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary, fontSize: 13),
                           ),
                           GestureDetector(
-                            onTap: _isAdding ? null : () async {
+                            onTap: _isAdding ? null : () {
+                              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text("${widget.product.name} ${local.addedToCart}"),
+                                  duration: const Duration(milliseconds: 800),
+                                ),
+                              );
+
                               setState(() => _isAdding = true);
-                              await cartProvider.addItem(widget.product);
-                              if (mounted) {
-                                setState(() => _isAdding = false);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text("${widget.product.name} ${local.addedToCart}")),
-                                );
-                              }
+                              
+                              cartProvider.addItem(widget.product).then((_) {
+                                if (mounted) {
+                                  setState(() => _isAdding = false);
+                                }
+                              });
                             },
                             child: Container(
                               padding: const EdgeInsets.all(6),
@@ -145,9 +154,6 @@ class _ProductCardState extends State<ProductCard> {
   Widget _buildProductImage(bool isDarkMode) {
     String rawImageUrl = widget.product.imageUrl.trim();
     
-    // طباعة رابط الصورة الحالي لنتأكد ماذا يصلنا من السيرفر في صفحة الأقسام
-    print("📸 [DEBUG] Product: ${widget.product.name}, ImagePath: '$rawImageUrl'");
-
     if (rawImageUrl.isEmpty || rawImageUrl == "null") {
       return const Icon(Icons.medication, size: 50, color: Colors.grey);
     }
@@ -166,7 +172,6 @@ class _ProductCardState extends State<ProductCard> {
         child: Container(color: Colors.white, width: double.infinity, height: double.infinity),
       ),
       errorWidget: (context, url, error) {
-         print("❌ [DEBUG] Image Load Failed: $url");
          return const Icon(Icons.medication, size: 50, color: Colors.grey);
       },
     );

@@ -1,5 +1,6 @@
 import 'package:Rafiq/core/api/home_service.dart';
 import 'package:Rafiq/core/app_colors.dart';
+import 'package:Rafiq/core/cart_provider.dart';
 import 'package:Rafiq/core/favorite_provider.dart';
 import 'package:Rafiq/core/settings_provider.dart';
 import 'package:Rafiq/data/models/home_model.dart';
@@ -7,6 +8,8 @@ import 'package:Rafiq/l10n/app_localizations.dart';
 import 'package:Rafiq/widgets/state_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 
 class ItemScreen extends StatefulWidget {
   const ItemScreen({super.key});
@@ -19,6 +22,7 @@ class _ItemScreenState extends State<ItemScreen> {
   int quantity = 1;
   Product? _fullProduct;
   bool _isLoading = false;
+  bool _isAddingToCart = false;
 
   @override
   void didChangeDependencies() {
@@ -59,6 +63,7 @@ class _ItemScreenState extends State<ItemScreen> {
     final local = AppLocalizations.of(context)!;
     var provider = Provider.of<SettingsProvider>(context);
     var theme = Theme.of(context);
+    var cartProvider = Provider.of<CartProvider>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -104,12 +109,17 @@ class _ItemScreenState extends State<ItemScreen> {
                 ),
                 child: Hero(
                   tag: 'product-${_fullProduct!.id}',
-                  child: Image.network(
-                    "https://rafiq1.runasp.net/Images/${_fullProduct!.imageUrl}",
+                  child: CachedNetworkImage(
+                    imageUrl: _fullProduct!.imageUrl,
                     width: double.infinity,
                     height: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
+                    fit: BoxFit.contain, // تغيير لـ contain لضمان عدم قص صورة المنتج
+                    placeholder: (context, url) => Shimmer.fromColors(
+                      baseColor: provider.isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
+                      highlightColor: provider.isDarkMode ? Colors.grey[700]! : Colors.grey[100]!,
+                      child: Container(color: Colors.white),
+                    ),
+                    errorWidget: (context, url, error) =>
                         const Icon(Icons.medication, size: 100, color: Colors.grey),
                   ),
                 ),
@@ -192,7 +202,21 @@ class _ItemScreenState extends State<ItemScreen> {
                       const SizedBox(width: 20),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: _isAddingToCart ? null : () {
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text("${_fullProduct!.name} ${local.addedToCart}"),
+                                duration: const Duration(milliseconds: 800),
+                              ),
+                            );
+
+                            setState(() => _isAddingToCart = true);
+                            
+                            cartProvider.addItem(_fullProduct!, quantity: quantity).then((_) {
+                              if (mounted) setState(() => _isAddingToCart = false);
+                            });
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: theme.colorScheme.primary,
                             padding: const EdgeInsets.symmetric(vertical: 15),
@@ -200,10 +224,12 @@ class _ItemScreenState extends State<ItemScreen> {
                               borderRadius: BorderRadius.circular(15),
                             ),
                           ),
-                          child: Text(
-                            local.addToCart,
-                            style: const TextStyle(color: Colors.white, fontSize: 16),
-                          ),
+                          child: _isAddingToCart 
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : Text(
+                                local.addToCart,
+                                style: const TextStyle(color: Colors.white, fontSize: 16),
+                              ),
                         ),
                       ),
                     ],

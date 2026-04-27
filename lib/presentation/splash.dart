@@ -35,10 +35,8 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
     Timer(const Duration(seconds: 3), () {
       if (mounted) {
         if (token != null && token.isNotEmpty) {
-          // ✅ لو فيه توكن → يدخل على الهوم مباشرة
           Navigator.pushReplacementNamed(context, AppRouter.home);
         } else {
-          // ✅ لو مفيش توكن → يروح لشاشة اختيار اللغة
           Navigator.pushReplacementNamed(context, AppRouter.chooseLanguage);
         }
       }
@@ -53,60 +51,72 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    // التحقق من وضع النظام (ليلي أم نهاري)
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: Container(
         width: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: AppColors.gradientLight,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDarkMode ? AppColors.gradientDark : AppColors.gradientLight,
           ),
         ),
         child: FadeTransition(
           opacity: _fadeAnimation,
           child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset('assets/image/logo.png'),
-                const SizedBox(height: 18),
-                RichText(
-                  text: const TextSpan(
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                    children: [
-                      TextSpan(
-                        text: '202',
-                        style: TextStyle(color: Colors.black, fontSize: 32),
-                      ),
-                      TextSpan(
-                        text: '6',
-                        style: TextStyle(color: Color(0xFF234CE4), fontSize: 32),
-                      ),
-                    ],
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset('assets/image/logo.png', height: 120),
+                  const SizedBox(height: 24),
+                  RichText(
+                    text: TextSpan(
+                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                      children: [
+                        TextSpan(
+                          text: '202',
+                          style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+                        ),
+                        TextSpan(
+                          text: '6',
+                          style: TextStyle(color: isDarkMode ? AppColors.primaryBlue : const Color(0xFF234CE4)),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 18),
-                const Text(
-                  'لأن صحتك تستحق \n رفيقًا تثق به',
-                  style: TextStyle(
-                    fontSize: 28,
-                    color: AppColors.darkBlue,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(height: 24),
+                  Text(
+                    'لأن صحتك تستحق \n رفيقًا تثق به',
+                    style: TextStyle(
+                      fontSize: 26,
+                      color: isDarkMode ? Colors.white : AppColors.darkBlue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Because your health deserves a \n companion you can trust',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.mainTextLight,
+                  const SizedBox(height: 12),
+                  Text(
+                    'Because your health deserves a \n companion you can trust',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w400,
+                      color: isDarkMode ? Colors.white70 : AppColors.mainTextLight,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+                  const SizedBox(height: 40),
+                  CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      isDarkMode ? Colors.white24 : AppColors.primaryBlue.withOpacity(0.3),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

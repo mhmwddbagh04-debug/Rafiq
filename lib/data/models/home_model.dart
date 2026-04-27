@@ -51,7 +51,6 @@ class PaginatedProductResponse {
   });
 
   factory PaginatedProductResponse.fromJson(Map<String, dynamic> json) {
-    // التوافق مع كود مصطفى (قد يرسلها Data أو data)
     final List? dataList = json['data'] ?? json['Data'];
     
     return PaginatedProductResponse(
@@ -81,14 +80,22 @@ class Product {
 
   factory Product.fromJson(Map<String, dynamic> json) {
     String extractImage(Map<String, dynamic> map) {
-      // مصطفى يستخدم 'Img' في كوده، سنضيفها كأولوية
       final keys = ['img', 'Img', 'imageUrl', 'ImageUrl', 'productImg', 'image'];
+      String rawPath = "";
       for (var key in keys) {
         if (map[key] != null && map[key].toString().isNotEmpty && map[key].toString() != "null") {
-          return map[key].toString();
+          rawPath = map[key].toString();
+          break;
         }
       }
-      return "";
+      
+      if (rawPath.isEmpty) return "";
+      if (rawPath.startsWith('http')) return rawPath;
+      
+      if (rawPath.startsWith('/')) {
+        return "https://rafiq1.runasp.net/Images$rawPath";
+      }
+      return "https://rafiq1.runasp.net/Images/$rawPath";
     }
 
     return Product(
@@ -149,7 +156,11 @@ class ImportantQuestion {
   ImportantQuestion({required this.id, required this.question, required this.answer});
 
   factory ImportantQuestion.fromJson(Map<String, dynamic> json) {
-    return ImportantQuestion(id: json['id'], question: json['question'], answer: json['answer']);
+    return ImportantQuestion(
+      id: json['id'] ?? json['Id'] ?? 0, 
+      question: json['question'] ?? json['Question'] ?? "", 
+      answer: json['answer'] ?? json['Answer'] ?? ""
+    );
   }
 }
 
@@ -160,7 +171,30 @@ class Advertisement {
   Advertisement({required this.id, required this.imageUrl});
 
   factory Advertisement.fromJson(Map<String, dynamic> json) {
-    return Advertisement(id: json['id'], imageUrl: json['imageUrl']);
+    String extractImage(Map<String, dynamic> map) {
+      final keys = ['img', 'Img', 'imageUrl', 'ImageUrl', 'image', 'advImg'];
+      String rawPath = "";
+      for (var key in keys) {
+        if (map[key] != null && map[key].toString().isNotEmpty && map[key].toString() != "null") {
+          rawPath = map[key].toString();
+          break;
+        }
+      }
+      
+      if (rawPath.isEmpty) return "";
+      if (rawPath.startsWith('http')) return rawPath;
+      
+      // جربنا Advertisement_images ولم يعمل، سنستخدم Images مثل المنتجات
+      if (rawPath.startsWith('/')) {
+        return "https://rafiq1.runasp.net/Images$rawPath";
+      }
+      return "https://rafiq1.runasp.net/Images/$rawPath";
+    }
+
+    return Advertisement(
+      id: json['id'] ?? json['Id'] ?? 0,
+      imageUrl: extractImage(json),
+    );
   }
 }
 
@@ -171,6 +205,28 @@ class DidYouKnow {
   DidYouKnow({required this.id, required this.imageUrl});
 
   factory DidYouKnow.fromJson(Map<String, dynamic> json) {
-    return DidYouKnow(id: json['id'], imageUrl: json['imageUrl']);
+    String extractImage(Map<String, dynamic> map) {
+      final keys = ['img', 'Img', 'imageUrl', 'ImageUrl', 'image'];
+      String rawPath = "";
+      for (var key in keys) {
+        if (map[key] != null && map[key].toString().isNotEmpty && map[key].toString() != "null") {
+          rawPath = map[key].toString();
+          break;
+        }
+      }
+      
+      if (rawPath.isEmpty) return "";
+      if (rawPath.startsWith('http')) return rawPath;
+      
+      if (rawPath.startsWith('/')) {
+        return "https://rafiq1.runasp.net/Images$rawPath";
+      }
+      return "https://rafiq1.runasp.net/Images/$rawPath";
+    }
+
+    return DidYouKnow(
+      id: json['id'] ?? json['Id'] ?? 0,
+      imageUrl: extractImage(json),
+    );
   }
 }

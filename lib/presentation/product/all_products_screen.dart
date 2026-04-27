@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:Rafiq/core/api/home_service.dart';
 import 'package:Rafiq/core/settings_provider.dart';
 import 'package:Rafiq/data/models/home_model.dart';
@@ -15,17 +16,17 @@ class AllProductsScreen extends StatefulWidget {
 }
 
 class _AllProductsScreenState extends State<AllProductsScreen> {
-  List<Product> _currentPageProducts = [];
+  List<Product> _products = [];
   String _searchQuery = "";
-  bool _isSearching = false;
+  bool _isSearchingFieldVisible = false;
   bool _isInitialized = false;
 
   int _currentPage = 1;
   int _totalPages = 1;
   bool _isLoading = true;
   String? _errorMessage;
-
   int? _categoryId;
+  Timer? _debounce;
 
   @override
   void didChangeDependencies() {
@@ -38,6 +39,12 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
   Future<void> _fetchProducts() async {
     setState(() {
       _isLoading = true;
@@ -45,12 +52,24 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
     });
 
     try {
+      // نطلب 500 منتج لضمان الوصول لكل المنتجات عند البحث
+      int requestedPageSize = _searchQuery.isNotEmpty ? 500 : 8;
+
       final PaginatedProductResponse response = _categoryId != null
-          ? await HomeService().getProductsByCategory(_categoryId!, page: _currentPage)
-          : await HomeService().getAllProducts(page: _currentPage);
+          ? await HomeService().getProductsByCategory(_categoryId!, page: _currentPage, pageSize: requestedPageSize, search: _searchQuery)
+          : await HomeService().getAllProducts(page: _currentPage, pageSize: requestedPageSize, search: _searchQuery);
+
+      print("📡 [AllProducts DEBUG] Received ${response.products.length} products for search: '$_searchQuery'");
 
       setState(() {
-        _currentPageProducts = response.products;
+        if (_searchQuery.isNotEmpty) {
+          _products = response.products.where((p) => 
+            p.name.toLowerCase().contains(_searchQuery.toLowerCase())
+          ).toList();
+        } else {
+          _products = response.products;
+        }
+        
         _totalPages = response.totalPages;
         _isLoading = false;
       });
@@ -60,6 +79,17 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  void _onSearchChanged(String v) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        _searchQuery = v;
+        _currentPage = 1; 
+      });
+      _fetchProducts();
+    });
   }
 
   void _goToPage(int page) {
@@ -81,12 +111,12 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: _isSearching
+        title: _isSearchingFieldVisible
             ? TextField(
                 autofocus: true,
                 decoration: InputDecoration(hintText: local.searchHint, border: InputBorder.none),
                 style: TextStyle(color: provider.isDarkMode ? Colors.white : Colors.black),
-                onChanged: (v) => setState(() => _searchQuery = v),
+                onChanged: _onSearchChanged,
               )
             : Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
@@ -98,8 +128,17 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: () => setState(() => _isSearching = !_isSearching),
-            icon: Icon(_isSearching ? Icons.close : Icons.search, color: theme.colorScheme.primary),
+            onPressed: () {
+              setState(() {
+                _isSearchingFieldVisible = !_isSearchingFieldVisible;
+                if (!_isSearchingFieldVisible && _searchQuery.isNotEmpty) {
+                  _searchQuery = "";
+                  _currentPage = 1;
+                  _fetchProducts();
+                }
+              });
+            },
+            icon: Icon(_isSearchingFieldVisible ? Icons.close : Icons.search, color: theme.colorScheme.primary),
           ),
         ],
       ),
@@ -112,11 +151,7 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
   }
 
   Widget _buildContent(ThemeData theme, bool isDarkMode, AppLocalizations local) {
-    final filteredList = _searchQuery.isEmpty 
-        ? _currentPageProducts 
-        : _currentPageProducts.where((p) => p.name.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
-
-    if (filteredList.isEmpty) {
+    if (_products.isEmpty) {
       return Center(child: Text(local.noProductsFound));
     }
 
@@ -130,8 +165,8 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2, childAspectRatio: 0.72, crossAxisSpacing: 15, mainAxisSpacing: 15,
               ),
-              itemCount: filteredList.length,
-              itemBuilder: (context, index) => ProductCard(product: filteredList[index], heroPrefix: 'all'),
+              itemCount: _products.length,
+              itemBuilder: (context, index) => ProductCard(product: _products[index], heroPrefix: 'all'),
             ),
           ),
         ),
@@ -141,6 +176,8 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
   }
 
   Widget _buildPagination(ThemeData theme, bool isDarkMode, AppLocalizations local) {
+    if (_totalPages <= 1) return const SizedBox.shrink();
+
     return Container(
       padding: const EdgeInsets.only(bottom: 30, top: 10),
       child: SingleChildScrollView(

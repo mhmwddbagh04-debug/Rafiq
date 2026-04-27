@@ -32,7 +32,6 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   void _loadAllData() {
-    // جعلنا البروفايل يقبل الـ Null في حالة الخطأ لضمان استقرار الشاشة
     _profileFuture = ProfileService().getProfile().catchError((e) {
       print("⚠️ [HomeTab] Profile load failed: $e");
       return null;
@@ -76,25 +75,38 @@ class _HomeTabState extends State<HomeTab> {
                 child: _buildSayHi(theme, provider, local),
               ),
               const SizedBox(height: 20),
-              
+
               FutureBuilder<HomeResponse>(
                 future: _homeDataFuture,
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
+                  if (snapshot.connectionState == ConnectionState.waiting ||
+                      snapshot.hasError) {
                     return const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 18),
-                      child: Skeleton(height: 155, width: double.infinity, borderRadius: 15),
+                      child: Skeleton(
+                        height: 155,
+                        width: double.infinity,
+                        borderRadius: 15,
+                      ),
                     );
                   }
-                  if (snapshot.hasData && snapshot.data!.advertisements.isNotEmpty) {
+                  if (snapshot.hasData &&
+                      snapshot.data!.advertisements.isNotEmpty) {
                     return CarouselSlider(
                       options: CarouselOptions(
-                        height: 155, autoPlay: true, enlargeCenterPage: true, aspectRatio: 16 / 9,
-                        autoPlayCurve: Curves.fastOutSlowIn, enableInfiniteScroll: true, viewportFraction: 0.85,
+                        height: 155,
+                        autoPlay: true,
+                        enlargeCenterPage: true,
+                        aspectRatio: 16 / 9,
+                        autoPlayCurve: Curves.fastOutSlowIn,
+                        enableInfiniteScroll: true,
+                        viewportFraction: 0.90,
+                        autoPlayInterval: const Duration(seconds:1), // تم التقليل من 3 لـ 2 ثانية
+                        autoPlayAnimationDuration: const Duration(milliseconds: 400), // تم التسريع من 800 لـ 500 ملي ثانية
                       ),
-                      items: snapshot.data!.advertisements.map((ad) => 
-                        _buildImageWidget("https://rafiq1.runasp.net/Advertisement_images/${ad.imageUrl}")
-                      ).toList(),
+                      items: snapshot.data!.advertisements
+                          .map((ad) => _buildImageWidget(ad.imageUrl))
+                          .toList(),
                     );
                   }
                   return const SizedBox.shrink();
@@ -102,17 +114,15 @@ class _HomeTabState extends State<HomeTab> {
               ),
 
               const SizedBox(height: 25),
-              
+
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 18),
                 child: FutureBuilder<HomeResponse>(
                   future: _homeDataFuture,
                   builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
+                    if (snapshot.connectionState == ConnectionState.waiting ||
+                        snapshot.hasError) {
                       return _buildHomeSkeleton(theme, local);
-                    }
-                    if (snapshot.hasError) {
-                      return ErrorStateWidget(errorMessage: snapshot.error.toString(), onRetry: _refreshData);
                     }
                     if (!snapshot.hasData) return const SizedBox.shrink();
 
@@ -120,15 +130,37 @@ class _HomeTabState extends State<HomeTab> {
                     return Column(
                       children: [
                         _buildSecHeader(
-                          theme: theme, title: local.bestSellingDrugs, local: local,
-                          onPressed: () => Navigator.pushNamed(context, AppRouter.allProducts, arguments: {'title': local.bestSellingDrugs, 'categoryId': null}),
+                          theme: theme,
+                          title: local.bestSellingDrugs,
+                          local: local,
+                          onPressed: () => Navigator.pushNamed(
+                            context,
+                            AppRouter.allProducts,
+                            arguments: {
+                              'title': local.bestSellingDrugs,
+                              'categoryId': null,
+                            },
+                          ),
                         ),
                         const SizedBox(height: 14),
-                        _buildProductsList(theme, provider, data.topSellingProducts),
+                        _buildProductsList(
+                          theme,
+                          provider,
+                          data.topSellingProducts,
+                        ),
                         const SizedBox(height: 20),
                         _buildSecHeader(
-                          theme: theme, title: local.newArrivals, local: local,
-                          onPressed: () => Navigator.pushNamed(context, AppRouter.allProducts, arguments: {'title': local.newArrivals, 'categoryId': null}),
+                          theme: theme,
+                          title: local.newArrivals,
+                          local: local,
+                          onPressed: () => Navigator.pushNamed(
+                            context,
+                            AppRouter.allProducts,
+                            arguments: {
+                              'title': local.newArrivals,
+                              'categoryId': null,
+                            },
+                          ),
                         ),
                         const SizedBox(height: 14),
                         _buildProductsList(theme, provider, data.newArrivals),
@@ -147,7 +179,12 @@ class _HomeTabState extends State<HomeTab> {
   Widget _buildHomeSkeleton(ThemeData theme, AppLocalizations local) {
     return Column(
       children: [
-        _buildSecHeader(theme: theme, title: local.bestSellingDrugs, local: local, onPressed: () {}),
+        _buildSecHeader(
+          theme: theme,
+          title: local.bestSellingDrugs,
+          local: local,
+          onPressed: () {},
+        ),
         const SizedBox(height: 14),
         SizedBox(
           height: 230,
@@ -155,11 +192,17 @@ class _HomeTabState extends State<HomeTab> {
             scrollDirection: Axis.horizontal,
             itemCount: 3,
             separatorBuilder: (_, __) => const SizedBox(width: 15),
-            itemBuilder: (_, __) => const Skeleton(height: 230, width: 155, borderRadius: 20),
+            itemBuilder: (_, __) =>
+                const Skeleton(height: 230, width: 155, borderRadius: 20),
           ),
         ),
         const SizedBox(height: 20),
-        _buildSecHeader(theme: theme, title: local.newArrivals, local: local, onPressed: () {}),
+        _buildSecHeader(
+          theme: theme,
+          title: local.newArrivals,
+          local: local,
+          onPressed: () {},
+        ),
         const SizedBox(height: 14),
         SizedBox(
           height: 230,
@@ -167,7 +210,8 @@ class _HomeTabState extends State<HomeTab> {
             scrollDirection: Axis.horizontal,
             itemCount: 3,
             separatorBuilder: (_, __) => const SizedBox(width: 15),
-            itemBuilder: (_, __) => const Skeleton(height: 230, width: 155, borderRadius: 20),
+            itemBuilder: (_, __) =>
+                const Skeleton(height: 230, width: 155, borderRadius: 20),
           ),
         ),
       ],
@@ -178,14 +222,22 @@ class _HomeTabState extends State<HomeTab> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(15),
       child: CachedNetworkImage(
-        imageUrl: url, fit: BoxFit.cover, width: 1000,
-        placeholder: (context, url) => const Skeleton(height: 155, width: double.infinity),
-        errorWidget: (context, url, error) => const Icon(Icons.broken_image, size: 50),
+        imageUrl: url,
+        fit: BoxFit.cover,
+        width: 1000,
+        placeholder: (context, url) =>
+            const Skeleton(height: 155, width: double.infinity),
+        errorWidget: (context, url, error) =>
+            const Icon(Icons.broken_image, size: 50),
       ),
     );
   }
 
-  Widget _buildSayHi(ThemeData theme, SettingsProvider provider, AppLocalizations local) {
+  Widget _buildSayHi(
+    ThemeData theme,
+    SettingsProvider provider,
+    AppLocalizations local,
+  ) {
     return FutureBuilder<UserModel?>(
       future: _profileFuture,
       builder: (context, snapshot) {
@@ -205,32 +257,60 @@ class _HomeTabState extends State<HomeTab> {
           children: [
             Text(
               "Hi ${user?.fullName ?? "User"}",
-              style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            Text(local.findMedicalNeeds, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+            Text(
+              local.findMedicalNeeds,
+              style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
+            ),
           ],
         );
       },
     );
   }
 
-  Widget _buildSecHeader({required ThemeData theme, required String title, required AppLocalizations local, required VoidCallback onPressed}) {
+  Widget _buildSecHeader({
+    required ThemeData theme,
+    required String title,
+    required AppLocalizations local,
+    required VoidCallback onPressed,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+        Text(
+          title,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+          ),
+        ),
         TextButton(onPressed: onPressed, child: Text(local.viewAll)),
       ],
     );
   }
 
-  Widget _buildProductsList(ThemeData theme, SettingsProvider provider, List<Product> products) {
-    if (products.isEmpty) return const SizedBox(height: 100, child: Center(child: Text("No products available")));
+  Widget _buildProductsList(
+    ThemeData theme,
+    SettingsProvider provider,
+    List<Product> products,
+  ) {
+    if (products.isEmpty)
+      return const SizedBox(
+        height: 100,
+        child: Center(child: Text("No products available")),
+      );
     return SizedBox(
       height: 230,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemBuilder: (context, index) => ProductCard(product: products[index], heroPrefix: 'home', width: 155),
+        itemBuilder: (context, index) => ProductCard(
+          product: products[index],
+          heroPrefix: 'home',
+          width: 155,
+        ),
         separatorBuilder: (context, index) => const SizedBox(width: 15),
         itemCount: products.length,
       ),

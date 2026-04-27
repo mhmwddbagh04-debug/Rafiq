@@ -1,6 +1,5 @@
 import 'package:Rafiq/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
 import '../../core/settings_provider.dart';
@@ -15,220 +14,334 @@ class AboutUsScreen extends StatelessWidget {
     final local = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-      appBar: AppBar(
-        title: Text(local.aboutRafiq),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: isDark ? Colors.white : Colors.black,
-      ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
-
-            Lottie.asset(
-              'assets/animations/Hand.json',
-              height: 200,
-              fit: BoxFit.contain,
-            ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
+      backgroundColor: isDark
+          ? AppColors.backgroundDark
+          : AppColors.backgroundLight,
+      body: CustomScrollView(
+        slivers: [
+          // 1. Curved Modern Header
+          SliverAppBar(
+            expandedHeight: 220,
+            pinned: true,
+            backgroundColor: AppColors.primaryBlue,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                local.aboutRafiq,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
+              ),
+              centerTitle: true,
+              background: Stack(
+                fit: StackFit.expand,
                 children: [
-                  _buildMainInfoCard(
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.darkBlue,
+                          AppColors.primaryBlue.withOpacity(0.8),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: -50,
+                    top: -20,
+                    child: CircleAvatar(
+                      radius: 100,
+                      backgroundColor: Colors.white.withOpacity(0.05),
+                    ),
+                  ),
+                  Center(
+                    child: Hero(
+                      tag: 'app_logo',
+                      child: Image.asset(
+                        'assets/image/logo.png',
+                        height: 90,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // 2. Main Content
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 25, 20, 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Mission Card with Glassmorphism feel
+                  _buildGlassCard(
                     isDark: isDark,
-                    title: local.ourMission,
-                    content: local.missionContent,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.rocket_launch,
+                              color: AppColors.primaryBlue,
+                              size: 28,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              local.ourMission,
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: isDark
+                                    ? Colors.white
+                                    : AppColors.darkBlue,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 15),
+                        Text(
+                          local.missionContent,
+                          style: TextStyle(
+                            fontSize: 16,
+                            height: 1.6,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
 
-                  const SizedBox(height: 25),
-
-                  _buildSectionLabel(local.teamBehind, isDark),
+                  const SizedBox(height: 35),
+                  _buildSectionHeader(local.teamBehind, isDark),
                   const SizedBox(height: 15),
 
-                  _buildModernDevCard(
-                    name: local.devMahmoud,
-                    role: local.flutterDeveloper,
-                    isDark: isDark,
-                  ),
-                  _buildModernDevCard(
-                    name: local.devYoussef,
-                    role: local.flutterDeveloper,
-                    isDark: isDark,
-                  ),
-                  _buildModernDevCard(
-                    name: local.devAhmed,
-                    role: local.flutterDeveloper,
-                    isDark: isDark,
-                  ),
-                  _buildModernDevCard(
-                    name: local.devMostafa,
-                    role: local.backendDeveloper,
-                    isDark: isDark,
-                    icon: Icons.storage_rounded,
+                  // Team Members Horizontal/Grid
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.4,
+                    children: [
+                      _buildMemberCard(
+                        local.devMahmoud,
+                        local.flutterDeveloper,
+                        Icons.code,
+                        isDark,
+                      ),
+                      _buildMemberCard(
+                        local.devYoussef,
+                        local.flutterDeveloper,
+                        Icons.smartphone,
+                        isDark,
+                      ),
+                      _buildMemberCard(
+                        local.devAhmed,
+                        local.flutterDeveloper,
+                        Icons.auto_fix_high,
+                        isDark,
+                      ),
+                      _buildMemberCard(
+                        local.devMostafa,
+                        local.backendDeveloper,
+                        Icons.storage,
+                        isDark,
+                      ),
+                    ],
                   ),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 35),
+                  _buildSectionHeader(
+                    local.loginTitle ?? "لماذا رفيق؟",
+                    isDark,
+                  ),
+                  const SizedBox(height: 15),
 
-                  _buildDetailTile(
+                  // Feature Tiles
+                  _buildFeatureItem(
                     icon: Icons.auto_awesome,
+                    iconColor: Colors.orange,
                     title: local.aiIntegration,
                     desc: local.aiDesc,
                     isDark: isDark,
                   ),
-                  _buildDetailTile(
+                  _buildFeatureItem(
                     icon: Icons.verified_user,
+                    iconColor: Colors.green,
                     title: local.trustedSources,
                     desc: local.trustedDesc,
                     isDark: isDark,
                   ),
-                  _buildDetailTile(
+                  _buildFeatureItem(
                     icon: Icons.security,
+                    iconColor: Colors.blue,
                     title: local.dataPrivacy,
                     desc: local.privacyDesc,
                     isDark: isDark,
                   ),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 60),
 
-                  Image.asset(
-                    isDark ? 'assets/image/Copilot_20260417_184551.png' : 'assets/image/rafiq2.png',
-                    height: 50,
+                  // Footer
+                  Center(
+                    child: Column(
+                      children: [
+                        Image.asset(
+                          isDark
+                              ? 'assets/image/Copilot_20260417_184551.png'
+                              : 'assets/image/rafiq2.png',
+                          height: 40,
+                          opacity: const AlwaysStoppedAnimation(0.5),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          "Rafiq App v1.0.0 Stable",
+                          style: TextStyle(
+                            color: Colors.grey.withOpacity(0.6),
+                            fontSize: 12,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "${local.version} 1.0.0 Stable",
-                    style: const TextStyle(color: Colors.grey, fontSize: 13),
-                  ),
-                  const SizedBox(height: 40),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildMainInfoCard({required bool isDark, required String title, required String content}) {
+  Widget _buildGlassCard({required bool isDark, required Widget child}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(30),
+        color: isDark ? AppColors.cardDark : Colors.white,
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.06),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
         ],
+        border: Border.all(color: isDark ? Colors.white10 : Colors.transparent),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildSectionHeader(String title, bool isDark) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+        color: isDark ? Colors.white : AppColors.darkBlue,
+      ),
+    );
+  }
+
+  Widget _buildMemberCard(
+    String name,
+    String role,
+    IconData icon,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.cardDark : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.05)
+              : Colors.black.withOpacity(0.05),
+        ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primaryBlue,
-            ),
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+            child: Icon(icon, size: 18, color: AppColors.primaryBlue),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
-            content,
-            style: TextStyle(
-              fontSize: 16,
-              height: 1.6,
-              color: isDark ? Colors.grey[400] : Colors.grey[700],
-            ),
+            name,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+          ),
+          Text(
+            role,
+            style: const TextStyle(color: Colors.grey, fontSize: 10),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionLabel(String text, bool isDark) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildModernDevCard({
-    required String name,
-    required String role,
+  Widget _buildFeatureItem({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String desc,
     required bool isDark,
-    IconData icon = Icons.flutter_dash,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B).withOpacity(0.5) : Colors.white.withOpacity(0.7),
+        color: isDark ? AppColors.cardDark.withOpacity(0.5) : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.primaryBlue.withOpacity(0.1),
+              color: iconColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(15),
             ),
-            child: Icon(icon, color: AppColors.primaryBlue),
+            child: Icon(icon, color: iconColor, size: 24),
           ),
-          const SizedBox(width: 15),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
+                const SizedBox(height: 2),
                 Text(
-                  role,
-                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                  desc,
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 12,
+                    height: 1.3,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailTile({required IconData icon, required String title, required String desc, required bool isDark}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Icon(icon, color: AppColors.primaryBlue, size: 28),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Text(desc, style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[600], fontSize: 13)),
               ],
             ),
           ),

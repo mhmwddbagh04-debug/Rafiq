@@ -30,115 +30,118 @@ class ChooseLanguagePage extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 26.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    child: Image.asset('assets/image/logo.png', height: 40),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Image.asset('assets/image/themes.png'),
-                const SizedBox(height: 30),
-                Text(
-                  local.personalizeTitle,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: mainTextColor,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  local.personalizeDesc,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: secondaryTextColor,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 35),
-
-                Column(
-                  children: [
-                    // Language Selection
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          local.language,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? AppColors.primaryBlue : AppColors.darkBlue,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            _buildToggleButton(
-                              text: local.english,
-                              isSelected: !provider.isArabic,
-                              onPressed: () => provider.changeLanguage('en'),
-                              isDark: isDark,
-                            ),
-                            const SizedBox(width: 8),
-                            _buildToggleButton(
-                              text: local.arabic,
-                              isSelected: provider.isArabic,
-                              onPressed: () => provider.changeLanguage('ar'),
-                              isDark: isDark,
-                            ),
-                          ],
-                        ),
-                      ],
+          child: SingleChildScrollView( // إضافة التمرير هنا
+            physics: const BouncingScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 26.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Image.asset('assets/image/logo.png', height: 40),
                     ),
-
-                    const SizedBox(height: 20),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          local.theme,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? AppColors.primaryBlue : AppColors.darkBlue,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            _buildToggleButton(
-                              icon: Icons.light_mode,
-                              isSelected: !isDark,
-                              onPressed: () => provider.changeTheme(ThemeMode.light),
-                              isDark: isDark,
-                            ),
-                            const SizedBox(width: 8),
-                            _buildToggleButton(
-                              icon: Icons.dark_mode,
-                              isSelected: isDark,
-                              onPressed: () => provider.changeTheme(ThemeMode.dark),
-                              isDark: isDark,
-                            ),
-                          ],
-                        ),
-                      ],
+                  ),
+                  const SizedBox(height: 10),
+                  Image.asset('assets/image/themes.png'),
+                  const SizedBox(height: 30),
+                  Text(
+                    local.personalizeTitle,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: mainTextColor,
                     ),
-                  ],
-                ),
-                const Spacer(),
-                CustomButton(
-                  text: local.letsStart,
-                  backgroundColor: AppColors.primaryBlue,
-                  onPressed: () => Navigator.pushNamed(context, AppRouter.login),
-                ),
-                const SizedBox(height: 30),
-              ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    local.personalizeDesc,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: secondaryTextColor,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 35),
+
+                  Column(
+                    children: [
+                      // Language Selection
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            local.language,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? AppColors.primaryBlue : AppColors.darkBlue,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              _buildToggleButton(
+                                text: local.english,
+                                isSelected: !provider.isArabic,
+                                onPressed: () => provider.changeLanguage('en'),
+                                isDark: isDark,
+                              ),
+                              const SizedBox(width: 8),
+                              _buildToggleButton(
+                                text: local.arabic,
+                                isSelected: provider.isArabic,
+                                onPressed: () => provider.changeLanguage('ar'),
+                                isDark: isDark,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            local.theme,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? AppColors.primaryBlue : AppColors.darkBlue,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              _buildToggleButton(
+                                icon: Icons.light_mode,
+                                isSelected: !isDark,
+                                onPressed: () => provider.changeTheme(ThemeMode.light),
+                                isDark: isDark,
+                              ),
+                              const SizedBox(width: 8),
+                              _buildToggleButton(
+                                icon: Icons.dark_mode,
+                                isSelected: isDark,
+                                onPressed: () => provider.changeTheme(ThemeMode.dark),
+                                isDark: isDark,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 60), // تم استبدال Spacer بمسافة ثابتة ليعمل التمرير
+                  CustomButton(
+                    text: local.letsStart,
+                    backgroundColor: AppColors.primaryBlue,
+                    onPressed: () => Navigator.pushNamed(context, AppRouter.login),
+                  ),
+                  const SizedBox(height: 30),
+                ],
+              ),
             ),
           ),
         ),

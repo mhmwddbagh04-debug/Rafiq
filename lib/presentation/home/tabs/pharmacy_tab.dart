@@ -86,7 +86,7 @@ class _PharmacyTabState extends State<PharmacyTab> {
                         autoPlayCurve: Curves.fastOutSlowIn, enableInfiniteScroll: true, viewportFraction: 0.85,
                       ),
                       items: snapshot.data!.advertisements.map((ad) => 
-                        _buildImageWidget("https://rafiq1.runasp.net/Advertisement_images/${ad.imageUrl}")
+                        _buildImageWidget(ad.imageUrl)
                       ).toList(),
                     );
                   }
