@@ -9,6 +9,7 @@ class CustomTextField extends StatefulWidget {
   final bool isPassword;
   final IconData? icon;
   final String? Function(String?)? validator;
+  final Iterable<String>? autofillHints;
 
   const CustomTextField({
     super.key,
@@ -17,6 +18,7 @@ class CustomTextField extends StatefulWidget {
     this.isPassword = false,
     this.icon,
     this.validator,
+    this.autofillHints,
   });
 
   @override
@@ -40,13 +42,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: TextFormField(
-
+        autofillHints: widget.autofillHints,
         style: TextStyle(
           fontSize: 18,
           color: provider.isDarkMode ? AppColors.mainTextLight : AppColors.mainTextLight,
         ),
         controller: widget.cont,
-        keyboardType: widget.isPassword ? TextInputType.visiblePassword : TextInputType.text,
+        keyboardType: widget.isPassword ? TextInputType.visiblePassword : TextInputType.emailAddress,
         obscureText: _obscureText,
         validator: widget.validator,
         decoration: InputDecoration(

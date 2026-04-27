@@ -11,30 +11,54 @@ class ProfileService {
       if (response.data == null) throw Exception("Empty response");
       return UserModel.fromJson(response.data);
     } on DioException catch (e) {
-      // بدلاً من رمي خطأ يكسر التطبيق، سنقوم بطباعة الخطأ وإرجاع استثناء يمكن للواجهة التعامل معه
-      print("❌ [Profile Error]: ${e.message}");
+      print("❌ [Profile Get Error]: ${e.response?.statusCode} - ${e.response?.data}");
       rethrow; 
     } catch (e) {
-      print("❌ [Profile Unexpected Error]: $e");
       rethrow;
     }
   }
 
-  Future<bool> updateProfile({
+  Future<void> updateProfile({
     required String firstName,
     required String lastName,
     required String email,
   }) async {
     try {
-      final response = await _dio.put("/Identity/Profile/update", data: {
+      final data = {
         "firstName": firstName,
         "lastName": lastName,
         "email": email,
-      });
-      return response.statusCode == 200;
+      };
+
+      print("🚀 [API Request] PUT /Identity/Profile/me");
+      print("Payload: $data");
+
+      // تغيير الرابط من /update إلى /me لأن الـ GET يعمل على /me
+      final response = await _dio.put("/Identity/Profile/me", data: data);
+
+      print("✅ [API Success] Status: ${response.statusCode}");
+      print("Response Body: ${response.data}");
+
     } on DioException catch (e) {
-      print("❌ [Update Profile Error]: ${e.message}");
-      return false;
+      print("❌ [API DioError] Status: ${e.response?.statusCode}");
+      print("Data: ${e.response?.data}");
+      
+      String? errorMessage = "فشل تحديث البيانات";
+      if (e.response?.data != null) {
+        if (e.response?.data is Map) {
+          errorMessage = e.response?.data['message'] ?? 
+                         e.response?.data['title'] ?? 
+                         e.response?.data.toString();
+        } else {
+          errorMessage = e.response?.data.toString();
+        }
+      } else {
+        errorMessage = e.message ?? "مشكلة في الاتصال بالسيرفر";
+      }
+      throw Exception(errorMessage);
+    } catch (e) {
+      print("❌ [API Unexpected Error]: $e");
+      throw Exception("حدث خطأ غير متوقع");
     }
   }
 }

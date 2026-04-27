@@ -1,4 +1,4 @@
-import 'package:Rafiq/core/api/order_service.dart';
+import 'package:Rafiq/core/api/payment_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/cart_provider.dart';
@@ -105,16 +105,28 @@ class _CartScreenState extends State<CartScreen> {
                 ],
               ),
             ),
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.remove_circle_outline, size: 22),
-                  onPressed: () => cart.removeSingleItem(item.productId),
+                  icon: const Icon(Icons.delete_forever, color: Colors.red, size: 20),
+                  onPressed: () => cart.removeItem(item.productId),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                 ),
-                Text('${item.quantity}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                IconButton(
-                  icon: const Icon(Icons.add_circle_outline, size: 22, color: Colors.blue),
-                  onPressed: () => cart.addItemById(item.productId),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline, size: 22),
+                      onPressed: () => cart.removeSingleItem(item.productId),
+                    ),
+                    Text('${item.quantity}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline, size: 22, color: Colors.blue),
+                      onPressed: () => cart.addItemById(item.productId),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -130,7 +142,7 @@ class _CartScreenState extends State<CartScreen> {
       decoration: BoxDecoration(
         color: isDark ? AppColors.cardDark : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
       ),
       child: SafeArea(
         child: Column(
@@ -159,19 +171,59 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Future<void> _handleCheckout(BuildContext context, AppLocalizations local) async {
+    final cart = Provider.of<CartProvider>(context, listen: false);
+    
     try {
-      showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
-      await OrderService().checkout();
-      if (!mounted) return;
-      Navigator.pop(context); 
-      Provider.of<CartProvider>(context, listen: false).clear();
+      showDialog(
+        context: context, 
+        barrierDismissible: false, 
+        builder: (_) => const Center(child: CircularProgressIndicator())
+      );
+
+      // تحديث السلة من السيرفر قبل البدء لضمان المزامنة
+      await cart.fetchCart();
+      debugPrint("المبلغ في التطبيق بعد التحديث: \${cart.totalAmount}");
+
+      if (cart.items.isEmpty) {
+        if (mounted) Navigator.pop(context);
+        return;
+      }
       
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(local.orderSuccess)));
-      Navigator.pop(context);
+      final String result = await PaymentService().makePayment(
+        context: context,
+        amount: cart.totalAmount,
+      );
+      
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading
+
+      if (result == 'success') {
+        cart.clear();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(local.orderSuccess), backgroundColor: Colors.green)
+        );
+        Navigator.pop(context);
+      } else if (result == 'redirected') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("جاري توجيهك لصفحة الدفع..."),
+            backgroundColor: Colors.blue,
+          )
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("حدث خطأ في عملية الدفع"),
+            backgroundColor: Colors.red,
+          )
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("خطأ: \$e"), backgroundColor: Colors.red)
+      );
     }
   }
 

@@ -30,21 +30,13 @@ class SocialAuthSection extends StatelessWidget {
         ),
         const SizedBox(height: 22),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _socialButton(
               context: context,
               text: "Google",
               icon: Iconsax.google_1_bold,
               color: Colors.black,
-              isDark: isDark,
-              onPressed: () {},
-            ),
-            _socialButton(
-              context: context,
-              text: "Facebook",
-              icon: Icons.facebook,
-              color: Colors.blue,
               isDark: isDark,
               onPressed: () {},
             ),
@@ -66,7 +58,7 @@ class SocialAuthSection extends StatelessWidget {
       onTap: onPressed,
       borderRadius: BorderRadius.circular(14),
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.4,
+        width: MediaQuery.of(context).size.width * 0.45,
         height: 50,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),

@@ -27,7 +27,6 @@ class HomeService {
         'pageSize': pageSize,
       };
       
-      // جربنا 'name' ولم يعمل، سنحول إلى 'search' أو 'SearchQuery'
       if (search != null && search.isNotEmpty) {
         params['search'] = search; 
       }
@@ -39,10 +38,64 @@ class HomeService {
     }
   }
 
+  // البحث باستخدام اسم الدواء
+  Future<List<Product>> searchProducts(String query) async {
+    try {
+      // 1. نحاول البحث عبر المسار العام مع بارامتر البحث
+      final response = await getAllProducts(page: 1, pageSize: 100, search: query);
+      
+      // فلترة إضافية للتأكد من النتائج
+      final List<Product> filteredResults = response.products.where((p) => 
+        p.name.toLowerCase().contains(query.toLowerCase()) || 
+        (p.description?.toLowerCase().contains(query.toLowerCase()) ?? false) ||
+        (p.activeIngredients?.toLowerCase().contains(query.toLowerCase()) ?? false)
+      ).toList();
+
+      if (filteredResults.isNotEmpty) return filteredResults;
+
+      // 2. إذا لم نجد نتائج، نحاول استخدام مسار البحث المخصص
+      final searchResponse = await _dio.get("/Customer/Search/Search", queryParameters: {'search': query});
+      dynamic rawData = searchResponse.data;
+      List dataList = [];
+      
+      if (rawData is List) {
+        dataList = rawData;
+      } else if (rawData is Map) {
+        dataList = rawData['data'] ?? rawData['Data'] ?? rawData['products'] ?? [];
+      }
+      
+      return dataList.map((p) => Product.fromJson(p)).toList();
+    } catch (e) {
+      print("❌ Search Error: $e");
+      return [];
+    }
+  }
+
+  // البحث عن أدوية بديلة (نفس المادة الفعالة) باستخدام ID الدواء
+  Future<List<Product>> getSimilarProducts(int productId) async {
+    try {
+      final response = await _dio.get("/Customer/Search/$productId/similar");
+      
+      dynamic rawData = response.data;
+      List dataList = [];
+      
+      if (rawData is List) {
+        dataList = rawData;
+      } else if (rawData is Map) {
+        dataList = rawData['data'] ?? rawData['Data'] ?? rawData['products'] ?? [];
+      }
+      
+      return dataList.map((p) => Product.fromJson(p)).toList();
+    } catch (e) {
+      print("❌ Similar Products Error: $e");
+      return [];
+    }
+  }
+
   Future<List<Category>> getCategories() async {
     try {
       final response = await _dio.get("/Customer/Store/AllCategories");
-      final List data = response.data['data'];
+      final List data = response.data['data'] ?? response.data['Data'] ?? [];
       return data.map((c) => Category.fromJson(c)).toList();
     } on DioException catch (e) {
       throw Exception("Failed to load categories");

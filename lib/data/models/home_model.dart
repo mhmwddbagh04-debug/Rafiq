@@ -68,6 +68,7 @@ class Product {
   final String imageUrl;
   final int totalSold;
   final String? description;
+  final String? activeIngredients;
 
   Product({
     required this.id,
@@ -76,6 +77,7 @@ class Product {
     required this.imageUrl,
     this.totalSold = 0,
     this.description,
+    this.activeIngredients,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -98,6 +100,20 @@ class Product {
       return "https://rafiq1.runasp.net/Images/$rawPath";
     }
 
+    String? parseActiveIngredients(dynamic data) {
+      if (data == null) return null;
+      if (data is String) return data;
+      if (data is List) {
+        return data.map((item) {
+          if (item is Map) {
+            return item['name'] ?? item['Name'] ?? "";
+          }
+          return item.toString();
+        }).where((name) => name.isNotEmpty).join(", ");
+      }
+      return data.toString();
+    }
+
     return Product(
       id: json['id'] ?? json['Id'] ?? 0,
       name: json['name'] ?? json['Name'] ?? "Unknown",
@@ -105,6 +121,7 @@ class Product {
       imageUrl: extractImage(json),
       totalSold: json['totalSold'] ?? 0,
       description: json['description'] ?? json['Description'],
+      activeIngredients: parseActiveIngredients(json['activeIngredients'] ?? json['ActiveIngredients'] ?? json['material'] ?? json['Material']),
     );
   }
 
@@ -123,6 +140,7 @@ class Product {
       'imageUrl': imageUrl,
       'totalSold': totalSold,
       'description': description,
+      'activeIngredients': activeIngredients,
     };
   }
 }

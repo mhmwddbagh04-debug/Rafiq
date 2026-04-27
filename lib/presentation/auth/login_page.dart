@@ -6,6 +6,7 @@ import 'package:Rafiq/widgets/custom_snackbar.dart';
 import 'package:Rafiq/widgets/social_auth_section.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
 import '../../core/settings_provider.dart';
@@ -61,24 +62,28 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
           const SizedBox(height: 22),
-          Form(
-            key: formKey,
-            child: Column(
-              children: [
-                CustomTextField(
-                  cont: emailController,
-                  hint: local.email,
-                  icon: Icons.email_outlined,
-                  validator: (value) => DataValidator.emailValidator(value ?? "", local),
-                ),
-                CustomTextField(
-                  cont: passwordController,
-                  hint: local.password,
-                  isPassword: true,
-                  icon: Icons.lock_outline,
-                  validator: (value) => DataValidator.passwordValidator(value ?? "", local),
-                ),
-              ],
+          AutofillGroup(
+            child: Form(
+              key: formKey,
+              child: Column(
+                children: [
+                  CustomTextField(
+                    cont: emailController,
+                    hint: local.email,
+                    icon: Icons.email_outlined,
+                    autofillHints: const [AutofillHints.email],
+                    validator: (value) => DataValidator.emailValidator(value ?? "", local),
+                  ),
+                  CustomTextField(
+                    cont: passwordController,
+                    hint: local.password,
+                    isPassword: true,
+                    icon: Icons.lock_outline,
+                    autofillHints: const [AutofillHints.password],
+                    validator: (value) => DataValidator.passwordValidator(value ?? "", local),
+                  ),
+                ],
+              ),
             ),
           ),
           Row(
@@ -118,6 +123,9 @@ class _LoginPageState extends State<LoginPage> {
     if (!formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
+      // Trigger autofill save
+      TextInput.finishAutofillContext();
+
       final result = await AuthService().login(
         emailController.text.trim(),
         passwordController.text.trim(),

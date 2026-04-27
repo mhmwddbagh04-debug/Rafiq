@@ -15,7 +15,7 @@ class ProductCard extends StatefulWidget {
   final Product product;
   final String heroPrefix;
   final double? width;
-  final VoidCallback? onTap; // إضافة هذا الباراميتر
+  final VoidCallback? onTap;
 
   const ProductCard({
     super.key,
@@ -43,7 +43,7 @@ class _ProductCardState extends State<ProductCard> {
         bool isFavorite = favProvider.isFavorite(widget.product.id);
 
         return InkWell(
-          onTap: widget.onTap ?? () { // استخدام onTap الممرر أو الافتراضي
+          onTap: widget.onTap ?? () {
             Navigator.pushNamed(context, AppRouter.item, arguments: widget.product);
           },
           child: Container(
@@ -78,17 +78,31 @@ class _ProductCardState extends State<ProductCard> {
                       Text(
                         widget.product.name,
                         maxLines: 1,
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold, 
+                          overflow: TextOverflow.ellipsis
+                        ),
                       ),
                       const SizedBox(height: 4),
-                      Text(local.pharmacy, style: theme.textTheme.labelSmall?.copyWith(color: Colors.grey)),
+                      Text(
+                        widget.product.description ?? "", 
+                        maxLines: 1,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: Colors.grey,
+                          overflow: TextOverflow.ellipsis
+                        ),
+                      ),
                       const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             "${widget.product.price.toStringAsFixed(2)} ${local.egp}",
-                            style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary, fontSize: 13),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold, 
+                              color: theme.colorScheme.primary, 
+                              fontSize: 13
+                            ),
                           ),
                           GestureDetector(
                             onTap: _isAdding ? null : () {
@@ -115,7 +129,11 @@ class _ProductCardState extends State<ProductCard> {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: _isAdding 
-                                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                ? const SizedBox(
+                                    width: 18, 
+                                    height: 18, 
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                                  )
                                 : const Icon(Iconsax.shopping_cart_outline, size: 18, color: Colors.white),
                             ),
                           ),

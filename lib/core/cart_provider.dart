@@ -103,33 +103,28 @@ class CartProvider with ChangeNotifier {
     final item = _serverItems[productId]!;
     final int oldQuantity = item.quantity;
 
-    // 1. تحديث متفائل (إظهار النتيجة فوراً للـ UI)
-    if (oldQuantity > 1) {
-      _serverItems[productId] = model.CartItem(
-        id: item.id,
-        productId: item.productId,
-        productName: item.productName,
-        productImg: item.productImg,
-        price: item.price,
-        quantity: oldQuantity - 1,
-      );
-      _totalPrice -= item.price;
-    } else {
-      _totalPrice -= item.price;
-      _serverItems.remove(productId);
+    if (oldQuantity <= 1) {
+      await removeItem(productId);
+      return;
     }
+
+    // تحديث متفائل
+    _serverItems[productId] = model.CartItem(
+      id: item.id,
+      productId: item.productId,
+      productName: item.productName,
+      productImg: item.productImg,
+      price: item.price,
+      quantity: oldQuantity - 1,
+    );
+    _totalPrice -= item.price;
     notifyListeners();
 
     try {
-      // 2. استخدام addToCart مع -1 للإنقاص (أضمن طريقة بدلاً من PUT أو DELETE)
-      // السيرفر سيتعامل معها بذكاء: إنقاص واحد، وإذا وصل لصفر سيحذفه
       await _cartService.addToCart(productId, -1);
-      
-      // 3. تأخير بسيط لضمان استقرار السيرفر ثم المزامنة
       await Future.delayed(const Duration(milliseconds: 500));
       await fetchCart();
     } catch (e) {
-      // في حالة الفشل نستعيد البيانات الحقيقية
       await fetchCart();
       debugPrint("Error removing item: $e");
     }

@@ -156,6 +156,7 @@ class _ItemScreenState extends State<ItemScreen> {
                       "${local.sold}: ${_fullProduct!.totalSold}",
                       style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
                     ),
+                  
                   const SizedBox(height: 20),
                   Text(
                     local.description,
@@ -171,6 +172,32 @@ class _ItemScreenState extends State<ItemScreen> {
                         _fullProduct!.description ?? "No description available",
                         style: const TextStyle(height: 1.5, fontSize: 15),
                       ),
+
+                  // Active Ingredients Section - Moved under description
+                  if (_fullProduct!.activeIngredients != null && _fullProduct!.activeIngredients!.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    Text(
+                      local.activeIngredients,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.1)),
+                      ),
+                      child: Text(
+                        _fullProduct!.activeIngredients!,
+                        style: const TextStyle(height: 1.5, fontSize: 15, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 30),
                   Row(

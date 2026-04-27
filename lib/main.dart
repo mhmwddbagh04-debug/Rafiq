@@ -1,16 +1,25 @@
-import 'package:Rafiq/core/app_colors.dart';
+import 'package:Rafiq/core/api/dio_client.dart';
+import 'package:Rafiq/core/app_router.dart';
+import 'package:Rafiq/core/settings_provider.dart';
 import 'package:Rafiq/core/cart_provider.dart';
 import 'package:Rafiq/core/favorite_provider.dart';
 import 'package:Rafiq/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'core/api/dio_client.dart';
-import 'core/app_router.dart';
-import 'core/settings_provider.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'core/app_colors.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+ WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    Stripe.publishableKey = "pk_test_51TbiizPoxcPmk868QZRYxcCby5tNhoJ7ZmQvLhsUbvnPuC884jEiHTxTcAu5SKKr7AHvkJPFVhfgljCZ9n1W65Om00zrxmVPkB";
+    await Stripe.instance.applySettings();
+  } catch (e) {
+    debugPrint("Stripe Initialization Error: $e");
+  }
+
   runApp(
     MultiProvider(
       providers: [

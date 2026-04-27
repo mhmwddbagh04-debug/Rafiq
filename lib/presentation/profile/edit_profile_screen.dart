@@ -1,13 +1,11 @@
 import 'package:Rafiq/core/api/profile_service.dart';
 import 'package:Rafiq/core/data-validator.dart';
-import 'package:Rafiq/core/settings_provider.dart';
 import 'package:Rafiq/data/models/user_model.dart';
 import 'package:Rafiq/l10n/app_localizations.dart';
 import 'package:Rafiq/widgets/custom_button.dart';
 import 'package:Rafiq/widgets/custom_text_field.dart';
 import 'package:Rafiq/widgets/skeleton.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -21,7 +19,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _isFetching = true;
 
@@ -34,14 +32,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _loadUserData() async {
     try {
       UserModel user = await ProfileService().getProfile();
-      List<String> names = user.fullName.split(' ');
-      _firstNameController.text = names.isNotEmpty ? names[0] : "";
-      _lastNameController.text = names.length > 1 ? names.sublist(1).join(' ') : "";
+      _firstNameController.text = user.firstName;
+      _lastNameController.text = user.lastName;
       _emailController.text = user.email;
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text(e.toString().replaceAll("Exception: ", ""))),
         );
       }
     } finally {
@@ -56,30 +53,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     final local = AppLocalizations.of(context)!;
     setState(() => _isLoading = true);
-    
+
     try {
-      bool success = await ProfileService().updateProfile(
+      // تم التعديل: الدالة الآن ترمي استثناء في حال الفشل يحتوي على التفاصيل
+      await ProfileService().updateProfile(
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
         email: _emailController.text.trim(),
       );
 
       if (mounted) {
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(local.profileUpdated)),
-          );
-          Navigator.pop(context, true);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(local.updateFailed)),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(local.profileUpdated),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
+        // عرض رسالة الخطأ القادمة من السيرفر مباشرة
+        String errorMessage = e.toString().replaceAll("Exception: ", "");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(
+            content: Text(errorMessage.isEmpty ? local.updateFailed : errorMessage),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -92,14 +92,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final local = AppLocalizations.of(context)!;
-    final provider = Provider.of<SettingsProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(local.editProfile),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
       ),
       body: _isFetching ? _buildSkeletonLoading() : _buildContent(local),
     );
@@ -149,22 +146,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Widget _buildSkeletonLoading() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      child: Column(
-        children: [
-          const Skeleton(height: 110, width: 110, borderRadius: 55),
-          const SizedBox(height: 35),
-          const Skeleton(height: 60, width: double.infinity),
-          const SizedBox(height: 15),
-          const Skeleton(height: 60, width: double.infinity),
-          const SizedBox(height: 15),
-          const Skeleton(height: 60, width: double.infinity),
-          const SizedBox(height: 30),
-          const Skeleton(height: 55, width: double.infinity),
-        ],
-      ),
-    );
+    return const Center(child: CircularProgressIndicator());
   }
 
   @override
