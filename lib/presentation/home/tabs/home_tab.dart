@@ -101,8 +101,8 @@ class _HomeTabState extends State<HomeTab> {
                         autoPlayCurve: Curves.fastOutSlowIn,
                         enableInfiniteScroll: true,
                         viewportFraction: 0.90,
-                        autoPlayInterval: const Duration(seconds:1), // تم التقليل من 3 لـ 2 ثانية
-                        autoPlayAnimationDuration: const Duration(milliseconds: 400), // تم التسريع من 800 لـ 500 ملي ثانية
+                        autoPlayInterval: const Duration(seconds:2), // تم التقليل من 3 لـ 2 ثانية
+                        autoPlayAnimationDuration: const Duration(milliseconds: 450), // تم التسريع من 800 لـ 500 ملي ثانية
                       ),
                       items: snapshot.data!.advertisements
                           .map((ad) => _buildImageWidget(ad.imageUrl))
