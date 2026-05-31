@@ -3,7 +3,11 @@ import 'package:Rafiq/core/app_router.dart';
 import 'package:Rafiq/core/settings_provider.dart';
 import 'package:Rafiq/core/cart_provider.dart';
 import 'package:Rafiq/core/favorite_provider.dart';
+import 'package:Rafiq/core/notification_service.dart';
+import 'package:Rafiq/firebase_options.dart';
 import 'package:Rafiq/l10n/app_localizations.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -11,8 +15,14 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'core/app_colors.dart';
 
 void main() async {
- WidgetsFlutterBinding.ensureInitialized();
-  
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  await NotificationService.initialize();
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   try {
     Stripe.publishableKey = "pk_test_51TbiizPoxcPmk868QZRYxcCby5tNhoJ7ZmQvLhsUbvnPuC884jEiHTxTcAu5SKKr7AHvkJPFVhfgljCZ9n1W65Om00zrxmVPkB";
     await Stripe.instance.applySettings();
@@ -30,6 +40,12 @@ void main() async {
       child: const MyApp(),
     ),
   );
+}
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print("Handling a background message: ${message.messageId}");
 }
 
 class MyApp extends StatelessWidget {

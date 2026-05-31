@@ -7,7 +7,6 @@ import 'package:Rafiq/data/models/user_model.dart';
 import 'package:Rafiq/l10n/app_localizations.dart';
 import 'package:Rafiq/widgets/product_card.dart';
 import 'package:Rafiq/widgets/skeleton.dart';
-import 'package:Rafiq/widgets/state_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -32,10 +31,13 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   void _loadAllData() {
-    _profileFuture = ProfileService().getProfile().catchError((e) {
-      print("⚠️ [HomeTab] Profile load failed: $e");
-      return null;
-    });
+    _profileFuture = ProfileService().getProfile().then<UserModel?>(
+      (value) => value,
+      onError: (e) {
+        debugPrint("⚠️ [HomeTab] Profile load failed: $e");
+        return null;
+      },
+    );
     _homeDataFuture = HomeService().getHomeData();
   }
 
@@ -46,7 +48,7 @@ class _HomeTabState extends State<HomeTab> {
     try {
       await Future.wait([_profileFuture, _homeDataFuture]);
     } catch (e) {
-      print("⚠️ [HomeTab] Refresh error: $e");
+      debugPrint("⚠️ [HomeTab] Refresh error: $e");
     }
   }
 
@@ -191,8 +193,8 @@ class _HomeTabState extends State<HomeTab> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: 3,
-            separatorBuilder: (_, __) => const SizedBox(width: 15),
-            itemBuilder: (_, __) =>
+            separatorBuilder: (_, _) => const SizedBox(width: 15),
+            itemBuilder: (_, _) =>
                 const Skeleton(height: 230, width: 155, borderRadius: 20),
           ),
         ),
@@ -209,8 +211,8 @@ class _HomeTabState extends State<HomeTab> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: 3,
-            separatorBuilder: (_, __) => const SizedBox(width: 15),
-            itemBuilder: (_, __) =>
+            separatorBuilder: (_, _) => const SizedBox(width: 15),
+            itemBuilder: (_, _) =>
                 const Skeleton(height: 230, width: 155, borderRadius: 20),
           ),
         ),
@@ -297,11 +299,12 @@ class _HomeTabState extends State<HomeTab> {
     SettingsProvider provider,
     List<Product> products,
   ) {
-    if (products.isEmpty)
+    if (products.isEmpty) {
       return const SizedBox(
         height: 100,
         child: Center(child: Text("No products available")),
       );
+    }
     return SizedBox(
       height: 230,
       child: ListView.separated(

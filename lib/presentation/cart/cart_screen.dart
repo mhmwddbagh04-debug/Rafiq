@@ -1,4 +1,4 @@
-import 'package:Rafiq/core/api/payment_service.dart';
+import 'order_review_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/cart_provider.dart';
@@ -92,7 +92,7 @@ class _CartScreenState extends State<CartScreen> {
               child: Image.network(
                 "https://rafiq1.runasp.net/Images/${item.productImg}",
                 width: 70, height: 70, fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Icon(Icons.medication, size: 40),
+                errorBuilder: (context, error, stackTrace) => const Icon(Icons.medication, size: 40),
               ),
             ),
             const SizedBox(width: 15),
@@ -182,47 +182,25 @@ class _CartScreenState extends State<CartScreen> {
 
       // تحديث السلة من السيرفر قبل البدء لضمان المزامنة
       await cart.fetchCart();
-      debugPrint("المبلغ في التطبيق بعد التحديث: \${cart.totalAmount}");
-
-      if (cart.items.isEmpty) {
-        if (mounted) Navigator.pop(context);
-        return;
-      }
-      
-      final String result = await PaymentService().makePayment(
-        context: context,
-        amount: cart.totalAmount,
-      );
       
       if (!mounted) return;
       Navigator.pop(context); // Close loading
 
-      if (result == 'success') {
-        cart.clear();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(local.orderSuccess), backgroundColor: Colors.green)
-        );
-        Navigator.pop(context);
-      } else if (result == 'redirected') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("جاري توجيهك لصفحة الدفع..."),
-            backgroundColor: Colors.blue,
-          )
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("حدث خطأ في عملية الدفع"),
-            backgroundColor: Colors.red,
-          )
-        );
+      if (cart.items.isEmpty) {
+        return;
       }
+      
+      // الانتقال لصفحة مراجعة الطلب
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const OrderReviewScreen()),
+      );
+
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("خطأ: \$e"), backgroundColor: Colors.red)
+        SnackBar(content: Text("خطأ: $e"), backgroundColor: Colors.red)
       );
     }
   }

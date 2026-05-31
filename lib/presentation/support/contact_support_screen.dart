@@ -36,6 +36,7 @@ class ContactSupportScreen extends StatelessWidget {
     // البيانات التي طلبت إضافتها
     const phoneNumber = "01144279380";
     const email = "mhmwddbagh04@gmail.com";
+    const githubUrl = "https://github.com/mhmwddbagh";
 
     return Scaffold(
       appBar: AppBar(
@@ -75,6 +76,15 @@ class ContactSupportScreen extends StatelessWidget {
               color: Colors.orange,
               onTap: () => _launchUrl(context, 'mailto:$email'),
             ),
+            const SizedBox(height: 16),
+            _buildContactCard(
+              context: context,
+              title: local.github,
+              subtitle: "github.com/mhmwddbagh",
+              icon: FontAwesome.github_brand,
+              color: isDark ? Colors.white : Colors.black,
+              onTap: () => _launchUrl(context, githubUrl),
+            ),
             const SizedBox(height: 40),
             Text(
               local.availableTime,
@@ -96,7 +106,7 @@ class ContactSupportScreen extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           child: Icon(
-            Iconsax.info_circle_outline,
+            Iconsax.call_outline,
             size: 60,
             color: AppColors.primaryBlue,
           ),
@@ -132,7 +142,7 @@ class ContactSupportScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isDark ? Colors.grey[900] : Colors.white,
+          color: isDark ? Color(0xff1A2A4D): Colors.white,
           border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey.withOpacity(0.2)),
           borderRadius: BorderRadius.circular(15),
           boxShadow: isDark ? [] : [

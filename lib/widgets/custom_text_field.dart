@@ -10,6 +10,8 @@ class CustomTextField extends StatefulWidget {
   final IconData? icon;
   final String? Function(String?)? validator;
   final Iterable<String>? autofillHints;
+  final bool enabled;
+  final TextInputType? keyboardType;
 
   const CustomTextField({
     super.key,
@@ -19,6 +21,8 @@ class CustomTextField extends StatefulWidget {
     this.icon,
     this.validator,
     this.autofillHints,
+    this.enabled = true,
+    this.keyboardType,
   });
 
   @override
@@ -31,7 +35,6 @@ class _CustomTextFieldState extends State<CustomTextField> {
   @override
   void initState() {
     super.initState();
-    // نبدأ بوضعية الإخفاء إذا كان الحقل كلمة مرور
     _obscureText = widget.isPassword;
   }
 
@@ -43,19 +46,19 @@ class _CustomTextFieldState extends State<CustomTextField> {
       padding: const EdgeInsets.only(bottom: 18),
       child: TextFormField(
         autofillHints: widget.autofillHints,
+        enabled: widget.enabled,
         style: TextStyle(
           fontSize: 18,
-          color: provider.isDarkMode ? AppColors.mainTextLight : AppColors.mainTextLight,
+          color: provider.isDarkMode ? Colors.white.withOpacity(0.9) : AppColors.mainTextLight,
         ),
         controller: widget.cont,
-        keyboardType: widget.isPassword ? TextInputType.visiblePassword : TextInputType.emailAddress,
+        keyboardType: widget.keyboardType ?? (widget.isPassword ? TextInputType.visiblePassword : TextInputType.text),
         obscureText: _obscureText,
         validator: widget.validator,
         decoration: InputDecoration(
           hintText: widget.hint,
           prefixIcon: widget.icon != null ? Icon(widget.icon, color: Colors.grey) : null,
           
-          // إضافة أيقونة العين في النهاية إذا كان الحقل كلمة مرور
           suffixIcon: widget.isPassword
               ? IconButton(
                   icon: Icon(
@@ -70,9 +73,14 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 )
               : null,
 
-          hintStyle: const TextStyle(fontSize: 14, color: AppColors.secTextLight),
+          hintStyle: TextStyle(
+            fontSize: 14, 
+            color: provider.isDarkMode ? Colors.white54 : AppColors.secTextLight
+          ),
           filled: true,
-          fillColor: const Color(0xffF4F6F9),
+          fillColor: provider.isDarkMode 
+              ? (widget.enabled ? const Color(0xff263350) : Colors.white10)
+              : (widget.enabled ? const Color(0xffF4F6F9) : Colors.grey.withOpacity(0.1)),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
             vertical: 18,

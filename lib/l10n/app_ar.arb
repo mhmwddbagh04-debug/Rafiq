@@ -96,6 +96,15 @@
   "updateFailed": "فشل تحديث الملف الشخصي",
   "fullName": "الاسم الكامل",
   "phone": "رقم الهاتف",
+  "address": "العنوان",
+  "gender": "الجنس",
+  "male": "ذكر",
+  "female": "أنثى",
+  "currentPassword": "كلمة المرور الحالية",
+  "newPassword": "كلمة المرور الجديدة",
+  "changePassword": "تغيير كلمة المرور",
+  "passwordChanged": "تم تغيير كلمة المرور بنجاح",
+  "passwordChangeFailed": "فشل تغيير كلمة المرور",
 
   "previous": "السابق",
   "next": "التالي",
@@ -115,6 +124,7 @@
   "callUs": "اتصل بنا",
   "whatsapp": "واتساب",
   "emailSupport": "الدعم عبر البريد",
+  "github": "جيت هب",
   "whatsappDesc": "تحدث معنا عبر واتساب",
   "availableTime": "متاحون 24/7 لاحتياجاتك الطبية",
 
@@ -131,6 +141,12 @@
   "dataPrivacy": "خصوصية البيانات",
   "privacyDesc": "بياناتك الطبية مشفرة وآمنة تماماً.",
   "version": "الإصدار",
+
+  "orderNumber": "طلب رقم #",
+  "orderDate": "التاريخ",
+  "cancelOrder": "إلغاء الطلب",
+  "noOrders": "لا توجد طلبات حالياً",
+  "orderCancelled": "تم إلغاء الطلب بنجاح",
 
   "devMahmoud": "محمود إياد",
   "devYoussef": "يوسف عياد",

@@ -115,10 +115,43 @@ class _HomePageState extends State<HomePage> {
         onPressed: () {
           Navigator.pushNamed(context, AppRouter.ai);
         },
-        backgroundColor: provider.isDarkMode
-            ? Colors.blue
-            : const Color(0xff173E90),
-        child: const Icon(Icons.wechat_outlined, color: Colors.white),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        highlightElevation: 0,
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            // جعلنا التصميم منحنياً بشكل مميز من جانب واحد من الأسفل
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(25),
+              bottomLeft: Radius.circular(25),
+              bottomRight: Radius.circular(3), // الجانب الأقل انحناءً ليعطي شكل "فقاعة" أو "ورقة"
+            ),
+            // خلفية زجاجية خفيفة جداً
+            color: provider.isDarkMode
+                ? Colors.white.withOpacity(0.06)
+                : Colors.blue.withOpacity(0.2),
+            border: Border.all(
+              color: Colors.blue.withAlpha(90), // حواف زرقاء شفافة
+              width: 1,
+            ),
+            boxShadow: [
+              // توهج ناعم خلف الأيقونة
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.2),
+                blurRadius: 15,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Image.asset(
+            'assets/image/icons8-ai-48.png',
+            fit: BoxFit.contain,
+            width: 42,
+            height: 42,
+          ),
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       drawer: const CustomDrawer(),

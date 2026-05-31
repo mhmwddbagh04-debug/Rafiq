@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../data/models/user_model.dart';
 import 'dio_client.dart';
 
@@ -11,7 +12,7 @@ class ProfileService {
       if (response.data == null) throw Exception("Empty response");
       return UserModel.fromJson(response.data);
     } on DioException catch (e) {
-      print("❌ [Profile Get Error]: ${e.response?.statusCode} - ${e.response?.data}");
+      debugPrint("❌ [Profile Get Error]: ${e.response?.statusCode} - ${e.response?.data}");
       rethrow; 
     } catch (e) {
       rethrow;
@@ -21,27 +22,30 @@ class ProfileService {
   Future<void> updateProfile({
     required String firstName,
     required String lastName,
-    required String email,
+    String? phoneNumber,
+    String? address,
+    String? gender,
   }) async {
     try {
       final data = {
         "firstName": firstName,
         "lastName": lastName,
-        "email": email,
+        "phoneNumber": phoneNumber,
+        "address": address,
+        "gender": gender,
       };
 
-      print("🚀 [API Request] PUT /Identity/Profile/me");
-      print("Payload: $data");
+      debugPrint("🚀 [API Request] PUT /Identity/Profile/me");
+      debugPrint("Payload: $data");
 
-      // تغيير الرابط من /update إلى /me لأن الـ GET يعمل على /me
       final response = await _dio.put("/Identity/Profile/me", data: data);
 
-      print("✅ [API Success] Status: ${response.statusCode}");
-      print("Response Body: ${response.data}");
+      debugPrint("✅ [API Success] Status: ${response.statusCode}");
+      debugPrint("Response Body: ${response.data}");
 
     } on DioException catch (e) {
-      print("❌ [API DioError] Status: ${e.response?.statusCode}");
-      print("Data: ${e.response?.data}");
+      debugPrint("❌ [API DioError] Status: ${e.response?.statusCode}");
+      debugPrint("Data: ${e.response?.data}");
       
       String? errorMessage = "فشل تحديث البيانات";
       if (e.response?.data != null) {
@@ -57,8 +61,34 @@ class ProfileService {
       }
       throw Exception(errorMessage);
     } catch (e) {
-      print("❌ [API Unexpected Error]: $e");
+      debugPrint("❌ [API Unexpected Error]: $e");
       throw Exception("حدث خطأ غير متوقع");
+    }
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final data = {
+        "currentPassword": currentPassword,
+        "newPassword": newPassword,
+      };
+
+      debugPrint("🚀 [API Request] POST /Identity/Profile/changePassword");
+      final response = await _dio.post("/Identity/Profile/changePassword", data: data);
+
+      debugPrint("✅ [API Success] Status: ${response.statusCode}");
+    } on DioException catch (e) {
+      debugPrint("❌ [API DioError] Status: ${e.response?.statusCode}");
+      String? errorMessage = "فشل تغيير كلمة المرور";
+      if (e.response?.data != null && e.response?.data is Map) {
+        errorMessage = e.response?.data['message'] ?? e.response?.data['title'] ?? errorMessage;
+      }
+      throw Exception(errorMessage);
+    } catch (e) {
+      rethrow;
     }
   }
 }

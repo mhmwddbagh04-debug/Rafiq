@@ -1,5 +1,6 @@
 import 'package:Rafiq/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:icons_plus/icons_plus.dart';
 import 'package:provider/provider.dart';
 import '../../core/app_colors.dart';
 import '../../core/settings_provider.dart';
@@ -167,21 +168,27 @@ class AboutUsScreen extends StatelessWidget {
 
                   // Feature Tiles
                   _buildFeatureItem(
-                    icon: Icons.auto_awesome,
+                    icon: const Icon(
+                      Iconsax.cpu_charge_bold,
+                      color: Colors.orange,
+                      size: 24,
+                    ),
                     iconColor: Colors.orange,
                     title: local.aiIntegration,
                     desc: local.aiDesc,
                     isDark: isDark,
                   ),
                   _buildFeatureItem(
-                    icon: Icons.verified_user,
+                    icon: const Icon(Icons.verified_user,
+                        color: Colors.green, size: 24),
                     iconColor: Colors.green,
                     title: local.trustedSources,
                     desc: local.trustedDesc,
                     isDark: isDark,
                   ),
                   _buildFeatureItem(
-                    icon: Icons.security,
+                    icon: const Icon(Icons.security,
+                        color: Colors.blue, size: 24),
                     iconColor: Colors.blue,
                     title: local.dataPrivacy,
                     desc: local.privacyDesc,
@@ -296,7 +303,7 @@ class AboutUsScreen extends StatelessWidget {
   }
 
   Widget _buildFeatureItem({
-    required IconData icon,
+    required Widget icon,
     required Color iconColor,
     required String title,
     required String desc,
@@ -317,7 +324,7 @@ class AboutUsScreen extends StatelessWidget {
               color: iconColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(15),
             ),
-            child: Icon(icon, color: iconColor, size: 24),
+            child: icon,
           ),
           const SizedBox(width: 16),
           Expanded(

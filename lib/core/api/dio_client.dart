@@ -52,7 +52,7 @@ class DioClient {
             if (currentToken != null &&
                 failedToken != null &&
                 currentToken != failedToken) {
-              print(
+              debugPrint(
                 "ℹ️ [Auth] Token already refreshed by another request. Retrying original request.",
               );
               return _retryOriginalRequest(e.requestOptions, handler);
@@ -60,7 +60,7 @@ class DioClient {
 
             // 2. إذا كان هناك طلب تجديد شغال حالياً، انتظر نتيجته
             if (_isRefreshing) {
-              print(
+              debugPrint(
                 "⏳ [Auth Wait] Waiting for ongoing refresh: ${e.requestOptions.path}",
               );
               final success = await _refreshCompleter?.future;
@@ -76,7 +76,7 @@ class DioClient {
             _refreshCompleter = Completer<bool>();
 
             try {
-              print("⚠️ [Auth] Starting REFRESH process...");
+              debugPrint("⚠️ [Auth] Starting REFRESH process...");
 
               final storageToken = (await TokenManager.getToken())?.trim();
               final storageRefreshToken = (await TokenManager.getRefreshToken())
@@ -87,11 +87,11 @@ class DioClient {
               }
 
               // طباعة المعلومات للتحقق (Debug)
-              print("🔍 [DEBUG] Sending to Server:");
-              print(
+              debugPrint("🔍 [DEBUG] Sending to Server:");
+              debugPrint(
                 "👉 Token End: ...${storageToken.substring(storageToken.length - 10)}",
               );
-              print("👉 Refresh: $storageRefreshToken");
+              debugPrint("👉 Refresh: $storageRefreshToken");
 
               final refreshDio = Dio();
               final response = await refreshDio.post(
@@ -109,7 +109,7 @@ class DioClient {
                 },
               );
 
-              print("🔍 [DEBUG] Refresh Response: ${response.data}");
+              debugPrint("🔍 [DEBUG] Refresh Response: ${response.data}");
 
               if (response.statusCode == 200) {
                 final newAccessToken = response.data['accessToken']
@@ -123,7 +123,7 @@ class DioClient {
                   await TokenManager.saveToken(newAccessToken);
                   await TokenManager.saveRefreshToken(newRefreshToken);
 
-                  print("✅ [Auth] Refresh SUCCESSFUL.");
+                  debugPrint("✅ [Auth] Refresh SUCCESSFUL.");
 
                   _isRefreshing = false;
                   _refreshCompleter?.complete(true);
@@ -134,7 +134,7 @@ class DioClient {
               }
               throw Exception("Invalid response structure");
             } on DioException catch (refreshErr) {
-              print(
+              debugPrint(
                 "❌ [Auth Refresh Error]: ${refreshErr.response?.statusCode} - ${refreshErr.response?.data}",
               );
 
@@ -145,7 +145,7 @@ class DioClient {
               // إذا رفض السيرفر التوكن نهائياً، نخرج المستخدم
               if (refreshErr.response?.statusCode == 400 ||
                   refreshErr.response?.statusCode == 401) {
-                print("🚨 [Auth] Refresh Token Rejected. Forced Logout.");
+                debugPrint("🚨 [Auth] Refresh Token Rejected. Forced Logout.");
                 await TokenManager.clearTokens();
                 if (navigatorKey.currentState != null) {
                   navigatorKey.currentState!.pushNamedAndRemoveUntil(
@@ -159,7 +159,7 @@ class DioClient {
               _isRefreshing = false;
               _refreshCompleter?.complete(false);
               _refreshCompleter = null;
-              print("❌ [Auth Unexpected Error]: $err");
+              debugPrint("❌ [Auth Unexpected Error]: $err");
               return handler.next(e);
             }
           }
@@ -176,7 +176,7 @@ class DioClient {
     ErrorInterceptorHandler handler,
   ) async {
     final token = await TokenManager.getToken();
-    print("🔁 [Retry] Retrying: ${requestOptions.path}");
+    debugPrint("🔁 [Retry] Retrying: ${requestOptions.path}");
 
     try {
       final response = await _dio.request(

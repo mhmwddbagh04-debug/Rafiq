@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' hide Category;
 import '../../data/models/home_model.dart';
 import 'dio_client.dart';
 
@@ -15,7 +16,7 @@ class HomeService {
         errorMessage = e.response?.data['message'] ?? errorMessage;
       }
       throw Exception(errorMessage);
-    } catch (e) {
+    } catch (_) {
       throw Exception("An unexpected error occurred while loading home data");
     }
   }
@@ -33,7 +34,7 @@ class HomeService {
 
       final response = await _dio.get("/Customer/Products", queryParameters: params);
       return PaginatedProductResponse.fromJson(response.data);
-    } on DioException catch (e) {
+    } on DioException {
       throw Exception("Failed to load products");
     }
   }
@@ -66,7 +67,7 @@ class HomeService {
       
       return dataList.map((p) => Product.fromJson(p)).toList();
     } catch (e) {
-      print("❌ Search Error: $e");
+      debugPrint("❌ Search Error: $e");
       return [];
     }
   }
@@ -87,7 +88,7 @@ class HomeService {
       
       return dataList.map((p) => Product.fromJson(p)).toList();
     } catch (e) {
-      print("❌ Similar Products Error: $e");
+      debugPrint("❌ Similar Products Error: $e");
       return [];
     }
   }
@@ -97,7 +98,7 @@ class HomeService {
       final response = await _dio.get("/Customer/Store/AllCategories");
       final List data = response.data['data'] ?? response.data['Data'] ?? [];
       return data.map((c) => Category.fromJson(c)).toList();
-    } on DioException catch (e) {
+    } on DioException {
       throw Exception("Failed to load categories");
     }
   }
@@ -117,7 +118,7 @@ class HomeService {
         queryParameters: params,
       );
       return PaginatedProductResponse.fromJson(response.data);
-    } on DioException catch (e) {
+    } on DioException {
       throw Exception("Failed to load category products");
     }
   }

@@ -4,6 +4,7 @@ class UserModel {
   final String email;
   final String? phoneNumber;
   final String? address;
+  final String? gender;
 
   UserModel({
     required this.firstName,
@@ -11,6 +12,7 @@ class UserModel {
     required this.email,
     this.phoneNumber,
     this.address,
+    this.gender,
   });
 
   // هذه الدالة تحول الـ JSON القادم من السيرفر إلى Object من نوع UserModel
@@ -21,6 +23,7 @@ class UserModel {
       email: json['email'] ?? '',
       phoneNumber: json['phoneNumber'],
       address: json['address'],
+      gender: json['gender'],
     );
   }
 

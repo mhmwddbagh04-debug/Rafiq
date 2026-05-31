@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'dio_client.dart';
 import 'token_manager.dart';
 
@@ -13,7 +14,7 @@ class AuthService {
     );
 
     final data = response.data;
-    print(response.data);
+    debugPrint(response.data.toString());
     if (data['accessToken'] != null) {
       await TokenManager.saveToken(data['accessToken']);
     }
@@ -34,7 +35,7 @@ class AuthService {
         "refreshToken": responseData['refreshToken'],
       },
     );
-    print(response.data);
+    debugPrint(response.data.toString());
     if (response.statusCode == 200) {
       final data = response.data;
       if (data['accessToken'] != null) {
@@ -88,7 +89,7 @@ class AuthService {
         );
       }
     } catch (e) {
-      print("Error during logout/revoke: $e");
+      debugPrint("Error during logout/revoke: $e");
     } finally {
       await TokenManager.clearTokens();
     }

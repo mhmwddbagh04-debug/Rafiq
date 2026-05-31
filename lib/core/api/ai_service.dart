@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'dio_client.dart';
 
 class AiService {
@@ -21,7 +22,7 @@ class AiService {
         ),
       );
 
-      print("✅ AI Success: ${response.data}");
+      debugPrint("✅ AI Success: ${response.data}");
 
       if (response.data is Map) {
         final data = response.data as Map;
@@ -42,7 +43,7 @@ class AiService {
         if (inner != null) {
           if (inner['error'] != null) {
             final errMsg = inner['error']['message']?.toString() ?? "خطأ من الـ AI";
-            print("❌ AI Inner Error: $errMsg");
+            debugPrint("❌ AI Inner Error: $errMsg");
             throw Exception(errMsg);
           }
 
@@ -64,9 +65,9 @@ class AiService {
       return response.data.toString();
 
     } on DioException catch (e) {
-      print("❌ AI Error Details:");
-      print("Status Code: ${e.response?.statusCode}");
-      print("Response Data: ${e.response?.data}");
+      debugPrint("❌ AI Error Details:");
+      debugPrint("Status Code: ${e.response?.statusCode}");
+      debugPrint("Response Data: ${e.response?.data}");
 
       final statusCode = e.response?.statusCode;
       final data = e.response?.data;
